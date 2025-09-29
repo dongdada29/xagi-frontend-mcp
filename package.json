@@ -1,7 +1,7 @@
 {
   "name": "xagi-frontend-mcp",
   "version": "1.0.1",
-  "description": "MCP server for frontend project scaffolding without external CLI",
+  "description": "XAGI Frontend MCP -  Create standardized coding projects from templates",
   "main": "dist/index.js",
   "type": "module",
   "keywords": [
