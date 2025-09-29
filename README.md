@@ -16,7 +16,22 @@
 
 ## 🚀 快速开始
 
-### 安装
+### 安装方式
+
+#### 方式 1: NPX（推荐，无需安装）
+
+```bash
+# 直接运行，无需全局安装
+npx xagi-frontend-mcp
+
+# 查看帮助
+npx xagi-frontend-mcp --help
+
+# 查看版本
+npx xagi-frontend-mcp --version
+```
+
+#### 方式 2: 全局安装
 
 ```bash
 npm install -g xagi-frontend-mcp
@@ -24,8 +39,23 @@ npm install -g xagi-frontend-mcp
 
 ### 在 Claude Desktop 中使用
 
+#### 使用 NPX（推荐）
+
 1. 打开 Claude Desktop 设置
 2. 添加 MCP 服务器配置：
+
+```json
+{
+  "mcpServers": {
+    "xagi-frontend-mcp": {
+      "command": "npx",
+      "args": ["xagi-frontend-mcp"]
+    }
+  }
+}
+```
+
+#### 使用全局安装
 
 ```json
 {

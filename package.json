@@ -27,6 +27,7 @@
   },
   "files": [
     "dist/",
+    "bin/",
     "templates/",
     "README.md",
     "LICENSE"
@@ -52,6 +53,6 @@
     "node": ">=18"
   },
   "bin": {
-    "xagi-frontend-mcp": "dist/index.js"
+    "xagi-frontend-mcp": "bin/cli.js"
   }
 }
