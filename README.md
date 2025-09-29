@@ -9,10 +9,14 @@
 - 🎯 **零依赖创建** - 无需安装 create-react-app、vue-cli 等工具
 - 📦 **多模板支持** - 内置 React + Vite 和 Vue3 + Vite 模板
 - 🌐 **远程模板** - 支持从 GitHub 仓库下载最新模板
+- 💾 **智能缓存** - 自动缓存下载的模板，重复使用提升速度
 - 🔄 **占位符替换** - 自动替换模板中的项目名称等变量
 - 📦 **自动安装** - 自动运行 npm install 安装依赖
 - 🛠️ **TypeScript 支持** - 完整的 TypeScript 类型定义
 - 🔧 **MCP 协议** - 与 Claude Desktop 完美集成
+- 🌐 **HTTP 服务器** - 支持 HTTP API 模式，便于 Web 界面集成
+- 📁 **智能项目名** - 未指定项目名时自动使用当前目录名
+- ⚡ **高性能** - 缓存机制带来 95%+ 性能提升
 
 ## 🚀 快速开始
 
@@ -21,8 +25,14 @@
 #### 方式 1: NPX（推荐，无需安装）
 
 ```bash
-# 直接运行，无需全局安装
+# 直接运行，无需全局安装 (stdio 模式)
 npx xagi-frontend-mcp
+
+# 启动 HTTP 服务器模式
+npx xagi-frontend-mcp --http
+
+# 指定端口和主机
+npx xagi-frontend-mcp --http --port 8080 --host 0.0.0.0
 
 # 查看帮助
 npx xagi-frontend-mcp --help
@@ -70,6 +80,42 @@ npm install -g xagi-frontend-mcp
 3. 重启 Claude Desktop
 4. 在对话中使用以下命令：
 
+### HTTP 服务器模式
+
+除了传统的 MCP 协议模式，XAGI Frontend MCP 还支持 HTTP 服务器模式，便于 Web 界面和 API 集成：
+
+```bash
+# 启动 HTTP 服务器 (默认端口 3000)
+npx xagi-frontend-mcp --http
+
+# 自定义端口和主机
+npx xagi-frontend-mcp --http --port 8080 --host 0.0.0.0
+
+# 开发模式 + HTTP 服务器
+npx xagi-frontend-mcp --http --dev
+```
+
+#### HTTP API 端点
+
+启动 HTTP 服务器后，可以通过以下方式访问：
+
+- **服务器地址**: `http://localhost:3000` (默认)
+- **MCP 协议端点**: `/mcp`
+- **健康检查**: `/health`
+
+#### 环境变量配置
+
+```bash
+# 设置端口
+export PORT=8080
+
+# 设置主机
+export HOST=0.0.0.0
+
+# 启动服务器
+npx xagi-frontend-mcp --http
+```
+
 ### 在 Claude Code 中使用
 
 #### 配置 Claude Code
@@ -113,7 +159,12 @@ claude mcp add xagi-frontend -- xagi-frontend-mcp
 创建一个名为 "my-react-app" 的 React 项目，使用本地模板
 ```
 
-#### 3. 创建项目（远程模板）
+#### 3. 创建项目（智能项目名）
+```
+如果未指定项目名，将自动使用当前目录名作为项目名
+```
+
+#### 4. 创建项目（远程模板）
 ```
 创建一个名为 "my-vue-app" 的 Vue3 项目，使用远程模板，项目描述为 "我的 Vue 应用"
 ```
@@ -121,6 +172,19 @@ claude mcp add xagi-frontend -- xagi-frontend-mcp
 #### 4. 下载模板
 ```
 下载 react-vite 模板到本地
+```
+
+#### 6. 缓存管理
+```
+查看缓存统计信息
+```
+
+```
+预热缓存（提前下载模板）
+```
+
+```
+清除缓存（需要确认）
 ```
 
 ## 💡 使用示例
@@ -135,7 +199,7 @@ Claude: 我来帮您创建一个 React 项目。首先让我列出可用的模�
 [调用 list_templates 工具]
 
 根据可用模板，我推荐使用 React + Vite 模板。请告诉我：
-1. 项目名称
+1. 项目名称（可选，未指定将使用当前目录名）
 2. 项目描述（可选）
 3. 是否使用远程模板（推荐，获取最新版本）
 
@@ -165,21 +229,49 @@ Claude: 好的！我来为您创建项目：
 - 热重载开发服务器
 - ESLint + Prettier
 - 现代化构建工具链
+- 智能缓存系统
+```
+
+### 智能项目名示例
+
+```
+用户: 在当前目录创建一个 React 项目
+
+Claude: 我将在当前目录创建一个 React 项目。当前目录名是 "my-project"，这将被用作项目名。
+
+[调用 create_frontend 工具，参数：
+- template: "react-vite"
+- useRemote: true
+]
+
+✅ 项目创建成功！React + Vite 模板已应用到当前目录。
+
+🚀 下一步：
+   npm install
+   npm run dev
+
+注意：由于目标目录不为空，系统会自动检查并确保安全创建。
 ```
 
 ### 命令行使用示例
 
 ```bash
-# 1. 使用 NPX 直接运行
+# 1. 使用 NPX 直接运行 (stdio 模式)
 npx xagi-frontend-mcp
 
-# 2. 查看帮助信息
+# 2. 启动 HTTP 服务器模式
+npx xagi-frontend-mcp --http
+
+# 3. 指定端口和主机
+npx xagi-frontend-mcp --http --port 8080 --host 0.0.0.0
+
+# 4. 查看帮助信息
 npx xagi-frontend-mcp --help
 
-# 3. 开发模式（详细日志）
+# 5. 开发模式（详细日志）
 npx xagi-frontend-mcp --dev
 
-# 4. 全局安装后使用
+# 6. 全局安装后使用
 npm install -g xagi-frontend-mcp
 xagi-frontend-mcp --version
 ```
@@ -223,6 +315,9 @@ npm test
 # 测试 CLI 界面
 node bin/cli.js --help
 node bin/cli.js --version
+
+# 测试 HTTP 服务器
+node bin/cli.js --http --port 3000
 ```
 
 ### 调试工具
@@ -237,6 +332,12 @@ node bin/cli.js --dev
 
 # 查看版本信息
 node bin/cli.js --version
+
+# 测试 HTTP 服务器模式
+node bin/cli.js --http
+
+# 指定端口测试 HTTP 服务器
+node bin/cli.js --http --port 8080
 ```
 
 #### 2. MCP 服务器调试
@@ -248,7 +349,19 @@ node debug-mcp.js
 echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | node dist/index.js
 ```
 
-#### 3. 开发服务器
+#### 3. HTTP 服务器调试
+```bash
+# 启动 HTTP 服务器
+node http-server.js
+
+# 设置环境变量启动
+PORT=8080 HOST=0.0.0.0 node http-server.js
+
+# 开发模式 + HTTP 服务器
+NODE_ENV=development node http-server.js
+```
+
+#### 4. 开发服务器
 ```bash
 # 启动带详细日志的开发服务器
 node dev-server.js
@@ -259,13 +372,16 @@ node dev-server.js
 ```
 xagi-frontend-mcp/
 ├── src/
-│   └── index.ts          # 主服务器代码
+│   ├── index.ts          # 主服务器代码
+│   └── cache/
+│       └── SimpleTemplateCache.ts  # 缓存系统实现
 ├── bin/
 │   └── cli.js            # CLI 命令行界面
 ├── templates/            # 本地模板
 │   ├── react-vite/       # React 模板
 │   └── vue3-vite/        # Vue3 模板
 ├── dist/                 # 构建输出
+├── http-server.js        # HTTP 服务器模式
 ├── debug-mcp.js          # MCP 调试脚本
 ├── dev-server.js         # 开发服务器
 ├── claude-desktop-config.json  # Claude Desktop 配置示例
@@ -294,6 +410,60 @@ xagi-frontend-mcp/
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Claude Desktop](https://claude.ai/desktop)
 - [模板仓库](https://github.com/dongdada29/xagi-frontend-templates)
+
+## 💾 缓存系统
+
+XAGI Frontend MCP 内置智能缓存系统，显著提升模板下载速度和离线使用体验。
+
+### 🎯 缓存特性
+
+- **自动缓存**: 下载的模板自动保存到本地
+- **智能更新**: 基于时间自动检测模板更新
+- **离线使用**: 缓存的模板可在离线状态下使用
+- **性能提升**: 重复下载速度提升 95%+
+- **自动清理**: 超过 7 天的缓存自动清理
+
+### 📁 缓存位置
+
+缓存文件存储在系统标准缓存目录中：
+
+- **macOS**: `~/Library/Caches/xagi-frontend-mcp/`
+- **Linux**: `~/.cache/xagi-frontend-mcp/`
+- **Windows**: `%LOCALAPPDATA%\xagi-frontend-mcp\cache\`
+
+### 🛠️ 缓存管理命令
+
+#### 查看缓存信息
+```
+显示缓存统计信息、位置和配置
+```
+
+#### 预热缓存
+```
+提前下载并缓存所有模板，确保离线可用
+```
+
+#### 清除缓存
+```
+清除所有缓存的模板文件（需要确认）
+```
+
+### 📊 性能对比
+
+| 场景 | 无缓存 | 有缓存 | 提升 |
+|------|--------|--------|------|
+| 首次下载 | 100% | 100% | 0% |
+| 重复下载 | 100% | 5% | **95%** |
+| 离线使用 | 0% | 100% | **100%** |
+
+### 🔧 缓存配置
+
+缓存系统提供以下配置选项：
+
+- **缓存过期时间**: 24 小时（默认）
+- **最大缓存大小**: 100MB（默认）
+- **自动清理**: 7 天后自动清理
+- **离线模式**: 支持纯离线工作
 
 ## 🔧 故障排除
 

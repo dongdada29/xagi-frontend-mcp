@@ -1,12 +1,19 @@
+#!/usr/bin/env node
+
+/**
+ * HTTP Server Mode for XAGI Frontend MCP
+ * 提供HTTP API接口，支持端口配置
+ */
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { HttpServerTransport } from "@modelcontextprotocol/sdk/server/http.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath } from "url";
 import https from "node:https";
 import * as tar from "tar";
 import { SimpleTemplateCache } from "./cache/SimpleTemplateCache.js";
@@ -15,11 +22,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_DIR = path.join(__dirname, "..", "templates");
 const templateCache = new SimpleTemplateCache();
 
+// 从环境变量获取端口，设置默认值
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || 'localhost';
+
+// 创建MCP服务器实例
 const server = new Server(
-  { name: "xagi-frontend-mcp", version: "0.1.0" },
+  { name: "xagi-frontend-mcp-http", version: "0.1.0" },
   { capabilities: { tools: {} } }
 );
 
+// 工具定义
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
@@ -40,13 +53,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           placeholders: {
             type: "object",
             additionalProperties: true,
-            description:
-              "Key-value pairs to replace in template files (format: ${{key}})",
+            description: "Key-value pairs to replace in template files (format: ${{key}})",
           },
           useRemote: {
             type: "boolean",
-            description:
-              "Whether to download template from remote repository (default: false)",
+            description: "Whether to download template from remote repository (default: false)",
           },
         },
         required: ["template", "projectName"],
@@ -72,7 +83,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "list_templates",
-      description: "List available templates from remote repository",
+      description: "List available templates",
       inputSchema: {
         type: "object",
         properties: {
@@ -85,7 +96,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "cache_info",
-      description: "Get cache statistics and information",
+      description: "Display cache statistics and information",
       inputSchema: {
         type: "object",
         properties: {},
@@ -93,13 +104,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "cache_clear",
-      description: "Clear the template cache",
+      description: "Clear all cached templates",
       inputSchema: {
         type: "object",
         properties: {
           confirm: {
             type: "boolean",
-            description: "Confirmation to clear cache (required)",
+            description: "Confirmation to clear cache",
           },
         },
         required: ["confirm"],
@@ -107,40 +118,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "cache_warm",
-      description: "Pre-cache templates for faster access",
+      description: "Pre-download and cache templates",
       inputSchema: {
         type: "object",
         properties: {
           templates: {
             type: "array",
             items: { type: "string" },
-            description: "List of template names to cache",
+            description: "List of templates to cache",
           },
           templateUrl: {
             type: "string",
             description: "Template repository URL (optional)",
           },
         },
+        required: ["templates"],
       },
     },
   ],
 }));
 
+// 工具处理
 server.setRequestHandler(CallToolRequestSchema, async (req) => {
   const { name, arguments: args } = req.params;
 
   if (name === "create_frontend") {
-    let {
-      template,
-      projectName,
-      placeholders = {},
-      useRemote = false,
-    } = args as {
-      template: string;
-      projectName?: string;
-      placeholders?: Record<string, string>;
-      useRemote?: boolean;
-    };
+    const { template, projectName, placeholders = {}, useRemote = false } = args;
 
     // Validate inputs
     if (!template) {
@@ -166,7 +169,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
     }
 
     try {
-      let src: string;
+      let src;
 
       if (useRemote) {
         // 从远程仓库下载模板（使用缓存）
@@ -209,10 +212,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
       throw error;
     }
   } else if (name === "download_template") {
-    const { template, templateUrl } = args as {
-      template: string;
-      templateUrl?: string;
-    };
+    const { template, templateUrl } = args;
 
     if (!template) {
       throw new Error("template is required");
@@ -224,14 +224,10 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
         fs.mkdirSync(tempDir, { recursive: true });
       }
 
-      const defaultUrl =
-        "https://github.com/dongdada29/xagi-frontend-templates/archive/main.tar.gz";
+      const defaultUrl = "https://github.com/dongdada29/xagi-frontend-templates/archive/main.tar.gz";
       const cachedTemplateDir = await templateCache.getTemplate(template, templateUrl || defaultUrl);
 
       // Copy from cache to temp directory (maintaining backward compatibility)
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
-      }
       const targetDir = path.join(tempDir, template);
       if (fs.existsSync(targetDir)) {
         fs.rmSync(targetDir, { recursive: true, force: true });
@@ -247,168 +243,94 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
         ],
       };
     } catch (error) {
-      throw new Error(
-        `Failed to download template: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+      throw new Error(`Failed to download template: ${error instanceof Error ? error.message : String(error)}`);
     }
   } else if (name === "list_templates") {
-    const { templateUrl } = args as {
-      templateUrl?: string;
+    const templates = [
+      {
+        name: "react-vite",
+        description: "基于 React 18 + Vite 的现代化前端项目模板",
+        features: ["React 18", "Vite", "TypeScript", "ESLint", "Prettier", "热重载"],
+      },
+      {
+        name: "vue3-vite",
+        description: "基于 Vue 3 + Vite 的现代化前端项目模板",
+        features: ["Vue 3", "Composition API", "Vite", "TypeScript", "ESLint", "Prettier", "SFC"],
+      },
+    ];
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `📋 可用模板列表:\n\n${templates
+            .map(
+              (t) =>
+                `• ${t.name}\n  ${t.description}\n  特性: ${t.features.join(", ")}\n`
+            )
+            .join("\n")}`,
+        },
+      ],
     };
-
-    try {
-      // 这里可以实现从远程仓库获取模板列表的逻辑
-      // 目前返回已知的模板列表
-      const templates = [
-        {
-          name: "react-vite",
-          description: "基于 React 18 + Vite 的现代化前端项目模板",
-          features: [
-            "React 18",
-            "Vite",
-            "TypeScript",
-            "ESLint",
-            "Prettier",
-            "热重载",
-          ],
-        },
-        {
-          name: "vue3-vite",
-          description: "基于 Vue 3 + Vite 的现代化前端项目模板",
-          features: [
-            "Vue 3",
-            "Composition API",
-            "Vite",
-            "TypeScript",
-            "ESLint",
-            "Prettier",
-            "SFC",
-          ],
-        },
-      ];
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `📋 可用模板列表:\n\n${templates
-              .map(
-                (t) =>
-                  `• ${t.name}\n  ${t.description}\n  特性: ${t.features.join(
-                    ", "
-                  )}\n`
-              )
-              .join("\n")}`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(
-        `Failed to list templates: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    }
   } else if (name === "cache_info") {
-    try {
-      const stats = templateCache.getCacheStats();
-      const cacheDir = templateCache.getCacheDir();
+    const stats = templateCache.getCacheStats();
+    const cacheDir = templateCache.getCacheDir();
+    const config = templateCache.config;
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: `📊 Template Cache Information:
-
-📁 Cache Directory: ${cacheDir}
-🎯 Cache Enabled: ${templateCache.config.enabled ? "Yes" : "No"}
-⏱️  Cache Expiry: ${Math.round(templateCache.config.maxAge / (60 * 60 * 1000))} hours
-💾 Max Cache Size: ${Math.round(templateCache.config.maxSize / (1024 * 1024))} MB
-
-📈 Cache Statistics:
-   Cache Hits: ${stats.hitCount}
-   Cache Misses: ${stats.missCount}
-   Hit Rate: ${stats.hitCount + stats.missCount > 0 ? Math.round((stats.hitCount / (stats.hitCount + stats.missCount)) * 100) : 0}%
-   Total Size: ${Math.round(stats.totalSize / (1024 * 1024))} MB
-   Cached Templates: ${stats.cachedTemplates.join(", ") || "None"}
-
-💡 Tips:
-   Cache is automatically cleaned up after 7 days
-   Use cache_warm to pre-load templates
-   Use cache_clear to manually clear cache`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(
-        `Failed to get cache info: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: `📊 Template Cache Information:\n\n📁 Cache Directory: ${cacheDir}\n🎯 Cache Enabled: ${config.enabled ? 'Yes' : 'No'}\n⏱️  Cache Expiry: ${config.maxAge / (60 * 60 * 1000)} hours\n💾 Max Cache Size: ${config.maxSize / (1024 * 1024)} MB\n\n📈 Cache Statistics:\n   Cache Hits: ${stats.hitCount}\n   Cache Misses: ${stats.missCount}\n   Hit Rate: ${stats.hitCount + stats.missCount > 0 ? Math.round((stats.hitCount / (stats.hitCount + stats.missCount)) * 100) : 0}%\n   Total Size: ${(stats.totalSize / (1024 * 1024)).toFixed(2)} MB\n   Cached Templates: ${stats.cachedTemplates.join(', ') || 'None'}\n\n💡 Tips:\n   Cache is automatically cleaned up after 7 days\n   Use cache_warm to pre-load templates\n   Use cache_clear to manually clear cache`,
+        },
+      ],
+    };
   } else if (name === "cache_clear") {
-    const { confirm } = args as { confirm: boolean };
+    const { confirm } = args;
 
     if (!confirm) {
-      throw new Error("Confirmation required to clear cache");
+      throw new Error("Please set confirm: true to clear cache");
     }
 
-    try {
-      await templateCache.clearCache();
+    await templateCache.clearCache();
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: "✅ Template cache cleared successfully\n\nCache will be rebuilt on next template download.",
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(
-        `Failed to clear cache: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    }
-  } else if (name === "cache_warm") {
-    const { templates = ["react-vite", "vue3-vite"], templateUrl } = args as {
-      templates?: string[];
-      templateUrl?: string;
+    return {
+      content: [
+        {
+          type: "text",
+          text: "🧹 Cache cleared successfully",
+        },
+      ],
     };
+  } else if (name === "cache_warm") {
+    const { templates, templateUrl } = args;
 
-    try {
-      const defaultUrl =
-        "https://github.com/dongdada29/xagi-frontend-templates/archive/main.tar.gz";
-      await templateCache.warmCache(templates, templateUrl || defaultUrl);
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `✅ Cache warming completed\n\nTemplates cached: ${templates.join(", ")}\n\nThese templates are now available for offline use.`,
-          },
-        ],
-      };
-    } catch (error) {
-      throw new Error(
-        `Failed to warm cache: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+    if (!templates || !Array.isArray(templates)) {
+      throw new Error("templates array is required");
     }
+
+    const defaultUrl = "https://github.com/dongdada29/xagi-frontend-templates/archive/main.tar.gz";
+    await templateCache.warmCache(templates, templateUrl || defaultUrl);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: "🔥 Cache warming completed",
+        },
+      ],
+    };
   } else {
     throw new Error(`Unknown tool: ${name}`);
   }
 });
 
+// 占位符替换函数
 function replaceRecursively(dir: string, vars: Record<string, string>) {
-  const files = fs.readdirSync(dir, { recursive: true }) as string[];
+  const files = fs.readdirSync(dir, { recursive: true });
 
   for (const file of files) {
-    const fullPath = path.join(dir, file as string);
+    const fullPath = path.join(dir, file);
 
     // Skip directories
     if (!fs.statSync(fullPath).isFile()) continue;
@@ -445,6 +367,7 @@ function replaceRecursively(dir: string, vars: Record<string, string>) {
   }
 }
 
+// npm 安装函数
 function npmInstall(cwd: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     const { spawn } = await import("node:child_process");
@@ -458,79 +381,49 @@ function npmInstall(cwd: string): Promise<void> {
 
     let errorOutput = "";
 
-    cp.stderr?.on("data", (data: Buffer) => {
+    cp.stderr?.on("data", (data) => {
       errorOutput += data.toString();
     });
 
-    cp.on("close", (code: number) => {
+    cp.on("close", (code) => {
       if (code === 0) {
         resolve();
       } else {
-        reject(
-          new Error(`npm install failed with code ${code}: ${errorOutput}`)
-        );
+        reject(new Error(`npm install failed with code ${code}: ${errorOutput}`));
       }
     });
 
-    cp.on("error", (error: Error) => {
+    cp.on("error", (error) => {
       reject(new Error(`Failed to spawn npm: ${error.message}`));
     });
   });
 }
 
-// Optional: Template downloading functionality
-async function downloadTemplate(
-  name: string,
-  dest: string,
-  templateUrl?: string
-) {
-  const TEMPLATE_URL =
-    templateUrl ||
-    `https://github.com/dongdada29/xagi-frontend-templates/archive/main.tar.gz`;
-
-  return new Promise<void>((resolve, reject) => {
-    const request = https.get(TEMPLATE_URL, (res) => {
-      // 处理重定向
-      if (res.statusCode === 301 || res.statusCode === 302) {
-        const redirectUrl = res.headers.location;
-        if (redirectUrl) {
-          // 递归调用处理重定向
-          downloadTemplate(name, dest, redirectUrl).then(resolve).catch(reject);
-          return;
-        }
-      }
-
-      if (res.statusCode !== 200) {
-        reject(new Error(`Failed to download template: ${res.statusCode}`));
-        return;
-      }
-
-      res
-        .pipe(
-          tar.x(
-            {
-              strip: 1, // 调整 strip 参数，因为仓库结构可能不同
-              cwd: dest,
-            },
-            [`xagi-frontend-templates-main/${name}`]
-          )
-        )
-        .on("finish", () => resolve())
-        .on("error", reject);
+// 启动HTTP服务器
+async function main() {
+  try {
+    // 创建HTTP传输
+    const transport = new HttpServerTransport({
+      host: HOST,
+      port: PORT,
     });
 
-    request.on("error", reject);
-  });
+    await server.connect(transport);
+
+    console.log(`🚀 XAGI Frontend MCP HTTP server started`);
+    console.log(`📡 Server running at http://${HOST}:${PORT}`);
+    console.log(`🛠️  Available tools: create_frontend, download_template, list_templates, cache_info, cache_clear, cache_warm`);
+
+    // 添加优雅关闭处理
+    process.on('SIGINT', () => {
+      console.log('\n🛑 Gracefully shutting down...');
+      process.exit(0);
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to start HTTP server:', error);
+    process.exit(1);
+  }
 }
 
-// Start the server
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("XAGI Frontend MCP server started");
-}
-
-main().catch((error) => {
-  console.error("Failed to start server:", error);
-  process.exit(1);
-});
+main();

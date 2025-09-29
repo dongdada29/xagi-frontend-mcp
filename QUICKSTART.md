@@ -9,6 +9,9 @@
 ```bash
 # 测试 NPX 是否可用
 npx xagi-frontend-mcp --help
+
+# 测试 HTTP 服务器模式
+npx xagi-frontend-mcp --http
 ```
 
 #### 方式 B: 全局安装
@@ -19,6 +22,9 @@ npm install -g xagi-frontend-mcp
 
 # 验证安装
 xagi-frontend-mcp --version
+
+# 测试 HTTP 服务器
+xagi-frontend-mcp --http --port 8080
 ```
 
 ### 2. 配置 Claude Desktop（1 分钟）
