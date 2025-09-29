@@ -5,9 +5,9 @@
  * 提供命令行界面和帮助信息
  */
 
-import { spawn } from 'child_process';
-import { fileURLToPath } from 'url';
-import path from 'path';
+import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+import path from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -56,9 +56,9 @@ function showHelp() {
 
 // 显示版本信息
 async function showVersion() {
-  const fs = await import('fs');
+  const fs = await import("fs");
   const packageJson = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8')
+    fs.readFileSync(path.join(__dirname, "../package.json"), "utf8")
   );
   console.log(`xagi-frontend-mcp v${packageJson.version}`);
 }
@@ -66,44 +66,44 @@ async function showVersion() {
 // 主函数
 function main() {
   const args = process.argv.slice(2);
-  
+
   // 处理命令行参数
-  if (args.includes('-h') || args.includes('--help')) {
+  if (args.includes("-h") || args.includes("--help")) {
     showHelp();
     process.exit(0);
   }
-  
-  if (args.includes('-v') || args.includes('--version')) {
+
+  if (args.includes("-v") || args.includes("--version")) {
     showVersion().then(() => process.exit(0));
     return;
   }
-  
+
   // 检查是否是开发模式
-  const isDev = args.includes('--dev');
-  
+  const isDev = args.includes("--dev");
+
   // 启动 MCP 服务器
-  const serverPath = path.join(__dirname, '../dist/index.js');
-  const server = spawn('node', [serverPath], {
-    stdio: 'inherit',
+  const serverPath = path.join(__dirname, "../dist/index.js");
+  const server = spawn("node", [serverPath], {
+    stdio: "inherit",
     env: {
       ...process.env,
-      NODE_ENV: isDev ? 'development' : 'production'
-    }
+      NODE_ENV: isDev ? "development" : "production",
+    },
   });
-  
+
   // 处理进程退出
-  server.on('close', (code) => {
+  server.on("close", (code) => {
     process.exit(code);
   });
-  
-  server.on('error', (error) => {
-    console.error('❌ 启动 MCP 服务器失败:', error.message);
+
+  server.on("error", (error) => {
+    console.error("❌ 启动 MCP 服务器失败:", error.message);
     process.exit(1);
   });
-  
+
   // 处理中断信号
-  process.on('SIGINT', () => {
-    console.log('\n🛑 正在关闭 MCP 服务器...');
+  process.on("SIGINT", () => {
+    console.log("\n🛑 正在关闭 MCP 服务器...");
     server.kill();
     process.exit(0);
   });

@@ -20,9 +20,19 @@
 
 3. **更新版本号**
    ```bash
-   npm version patch  # 0.1.0 -> 0.1.1
-   npm version minor  # 0.1.0 -> 0.2.0
-   npm version major  # 0.1.0 -> 1.0.0
+   npm version patch  # 1.0.0 -> 1.0.1
+   npm version minor  # 1.0.0 -> 1.1.0
+   npm version major  # 1.0.0 -> 2.0.0
+   ```
+
+4. **测试 NPX 功能**
+   ```bash
+   # 本地测试 NPX
+   npx . --help
+   npx . --version
+   
+   # 测试 MCP 服务器
+   npx . --dev
    ```
 
 #### 发布步骤
@@ -45,6 +55,10 @@
 4. **验证发布**
    ```bash
    npm view xagi-frontend-mcp
+   
+   # 测试 NPX 安装
+   npx xagi-frontend-mcp@latest --help
+   npx xagi-frontend-mcp@latest --version
    ```
 
 ### 2. GitHub Releases
