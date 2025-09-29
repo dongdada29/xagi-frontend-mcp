@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import https from 'node:https';
-import tar from 'tar';
+import * as tar from 'tar';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_DIR = path.join(__dirname, '..', 'templates');
@@ -37,66 +37,183 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             additionalProperties: true,
             description: 'Key-value pairs to replace in template files (format: ${{key}})'
           },
+          useRemote: {
+            type: 'boolean',
+            description: 'Whether to download template from remote repository (default: false)'
+          },
         },
         required: ['template', 'projectName'],
+      },
+    },
+    {
+      name: 'download_template',
+      description: 'Download a template from remote repository',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          template: {
+            type: 'string',
+            description: 'Template name to download'
+          },
+          templateUrl: {
+            type: 'string',
+            description: 'Custom template repository URL (optional)'
+          },
+        },
+        required: ['template'],
+      },
+    },
+    {
+      name: 'list_templates',
+      description: 'List available templates from remote repository',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          templateUrl: {
+            type: 'string',
+            description: 'Template repository URL (optional)'
+          },
+        },
       },
     },
   ],
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (req) => {
-  if (req.params.name !== 'create_frontend') {
-    throw new Error('Unknown tool');
-  }
+  const { name, arguments: args } = req.params;
 
-  const { template, projectName, placeholders = {} } = req.params.arguments as {
-    template: string;
-    projectName: string;
-    placeholders?: Record<string, string>;
-  };
-
-  // Validate inputs
-  if (!template || !projectName) {
-    throw new Error('template and projectName are required');
-  }
-
-  const src = path.join(TEMPLATE_DIR, template);
-  if (!fs.existsSync(src)) {
-    throw new Error(`Template ${template} not found in ${TEMPLATE_DIR}`);
-  }
-
-  const dest = path.resolve(projectName);
-  if (fs.existsSync(dest)) {
-    throw new Error(`Directory ${projectName} already exists`);
-  }
-
-  try {
-    // 1. Copy template files
-    fs.cpSync(src, dest, {
-      recursive: true,
-      filter: (srcPath) => !srcPath.includes('node_modules')
-    });
-
-    // 2. Replace placeholders
-    replaceRecursively(dest, placeholders);
-
-    // 3. Install dependencies
-    await npmInstall(dest);
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: `✅ ${projectName} created successfully.\n🚀  Next steps:\n   cd ${projectName}\n   npm run dev`,
-        },
-      ],
+  if (name === 'create_frontend') {
+    const { template, projectName, placeholders = {}, useRemote = false } = args as {
+      template: string;
+      projectName: string;
+      placeholders?: Record<string, string>;
+      useRemote?: boolean;
     };
-  } catch (error) {
-    // Clean up on failure
-    if (fs.existsSync(dest)) {
-      fs.rmSync(dest, { recursive: true, force: true });
+
+    // Validate inputs
+    if (!template || !projectName) {
+      throw new Error('template and projectName are required');
     }
-    throw error;
+
+    const dest = path.resolve(projectName);
+    if (fs.existsSync(dest)) {
+      throw new Error(`Directory ${projectName} already exists`);
+    }
+
+    try {
+      let src: string;
+
+      if (useRemote) {
+        // 从远程仓库下载模板
+        const tempDir = path.join(__dirname, '..', 'temp-templates');
+        if (!fs.existsSync(tempDir)) {
+          fs.mkdirSync(tempDir, { recursive: true });
+        }
+        
+        const templateUrl = `https://github.com/dongdada29/xagi-fronted-templates/archive/main.tar.gz`;
+        await downloadTemplate(template, tempDir, templateUrl);
+        src = path.join(tempDir, 'xagi-fronted-templates-main', template);
+      } else {
+        // 使用本地模板
+        src = path.join(TEMPLATE_DIR, template);
+        if (!fs.existsSync(src)) {
+          throw new Error(`Template ${template} not found in ${TEMPLATE_DIR}`);
+        }
+      }
+
+      // 1. Copy template files
+      fs.cpSync(src, dest, {
+        recursive: true,
+        filter: (srcPath) => !srcPath.includes('node_modules')
+      });
+
+      // 2. Replace placeholders
+      replaceRecursively(dest, placeholders);
+
+      // 3. Install dependencies
+      await npmInstall(dest);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `✅ ${projectName} created successfully.\n🚀  Next steps:\n   cd ${projectName}\n   npm run dev`,
+          },
+        ],
+      };
+    } catch (error) {
+      // Clean up on failure
+      if (fs.existsSync(dest)) {
+        fs.rmSync(dest, { recursive: true, force: true });
+      }
+      throw error;
+    }
+  } else if (name === 'download_template') {
+    const { template, templateUrl } = args as {
+      template: string;
+      templateUrl?: string;
+    };
+
+    if (!template) {
+      throw new Error('template is required');
+    }
+
+    try {
+      const tempDir = path.join(__dirname, '..', 'temp-templates');
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+
+      const defaultUrl = 'https://github.com/dongdada29/xagi-fronted-templates/archive/main.tar.gz';
+      await downloadTemplate(template, tempDir, templateUrl || defaultUrl);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `✅ Template ${template} downloaded successfully to temp-templates directory`,
+          },
+        ],
+      };
+    } catch (error) {
+      throw new Error(`Failed to download template: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } else if (name === 'list_templates') {
+    const { templateUrl } = args as {
+      templateUrl?: string;
+    };
+
+    try {
+      // 这里可以实现从远程仓库获取模板列表的逻辑
+      // 目前返回已知的模板列表
+      const templates = [
+        {
+          name: 'react-vite',
+          description: '基于 React 18 + Vite 的现代化前端项目模板',
+          features: ['React 18', 'Vite', 'TypeScript', 'ESLint', 'Prettier', '热重载']
+        },
+        {
+          name: 'vue3-vite', 
+          description: '基于 Vue 3 + Vite 的现代化前端项目模板',
+          features: ['Vue 3', 'Composition API', 'Vite', 'TypeScript', 'ESLint', 'Prettier', 'SFC']
+        }
+      ];
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `📋 可用模板列表:\n\n${templates.map(t => 
+              `• ${t.name}\n  ${t.description}\n  特性: ${t.features.join(', ')}\n`
+            ).join('\n')}`,
+          },
+        ],
+      };
+    } catch (error) {
+      throw new Error(`Failed to list templates: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } else {
+    throw new Error(`Unknown tool: ${name}`);
   }
 });
 
@@ -163,22 +280,34 @@ function npmInstall(cwd: string): Promise<void> {
 
 // Optional: Template downloading functionality
 async function downloadTemplate(name: string, dest: string, templateUrl?: string) {
-  const TEMPLATE_URL = templateUrl || `https://github.com/your-org/templates/archive/main.tar.gz`;
+  const TEMPLATE_URL = templateUrl || `https://github.com/dongdada29/xagi-fronted-templates/archive/main.tar.gz`;
 
   return new Promise<void>((resolve, reject) => {
-    https.get(`${TEMPLATE_URL}`, (res) => {
+    const request = https.get(TEMPLATE_URL, (res) => {
+      // 处理重定向
+      if (res.statusCode === 301 || res.statusCode === 302) {
+        const redirectUrl = res.headers.location;
+        if (redirectUrl) {
+          // 递归调用处理重定向
+          downloadTemplate(name, dest, redirectUrl).then(resolve).catch(reject);
+          return;
+        }
+      }
+
       if (res.statusCode !== 200) {
         reject(new Error(`Failed to download template: ${res.statusCode}`));
         return;
       }
 
       res.pipe(tar.x({
-        strip: 2,
+        strip: 1, // 调整 strip 参数，因为仓库结构可能不同
         cwd: dest
-      }, [`templates-main/${name}`]))
+      }, [`xagi-fronted-templates-main/${name}`]))
         .on('finish', () => resolve())
         .on('error', reject);
-    }).on('error', reject);
+    });
+    
+    request.on('error', reject);
   });
 }
 
