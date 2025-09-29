@@ -70,6 +70,37 @@ npm install -g xagi-frontend-mcp
 3. 重启 Claude Desktop
 4. 在对话中使用以下命令：
 
+### 在 Claude Code 中使用
+
+#### 配置 Claude Code
+
+在 Claude Code 中配置 MCP 服务器：
+
+```json
+{
+  "mcpServers": {
+    "xagi-frontend-mcp": {
+      "command": "npx",
+      "args": ["xagi-frontend-mcp"]
+    }
+  }
+}
+```
+
+#### 命令行使用
+
+```bash
+# 在 Claude Code 中直接使用
+claude mcp add xagi-frontend -- npx xagi-frontend-mcp
+
+# 或者使用全局安装
+claude mcp add xagi-frontend -- xagi-frontend-mcp
+```
+
+#### 详细使用指南
+
+查看 [Claude Code 使用指南](CLAUDE_CODE_GUIDE.md) 了解完整的使用方法。
+
 ### 可用工具
 
 #### 1. 列出可用模板
