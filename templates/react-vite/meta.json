@@ -1,0 +1,5 @@
+{
+  "name": "React + Vite",
+  "description": "Modern React project with Vite",
+  "features": ["React", "Vite", "TypeScript", "ESLint", "Prettier"]
+}
