@@ -1,13 +1,42 @@
 {
   "name": "xagi-frontend-mcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "MCP server for frontend project scaffolding without external CLI",
   "main": "dist/index.js",
   "type": "module",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "frontend",
+    "scaffolding",
+    "react",
+    "vue",
+    "vite",
+    "typescript",
+    "claude"
+  ],
+  "author": "dongdada29",
+  "license": "MIT",
+  "homepage": "https://github.com/dongdada29/xagi-frontend-mcp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dongdada29/xagi-frontend-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dongdada29/xagi-frontend-mcp/issues"
+  },
+  "files": [
+    "dist/",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build",
+    "test": "node debug-mcp.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
