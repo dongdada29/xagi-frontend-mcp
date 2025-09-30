@@ -1,5 +1,0 @@
-{
-  "name": "Vue 3 + Vite",
-  "description": "Modern Vue 3 project with Vite",
-  "features": ["Vue 3", "Vite", "TypeScript", "ESLint", "Prettier"]
-}

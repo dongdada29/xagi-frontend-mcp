@@ -22,6 +22,9 @@ export interface CacheStats {
 
 export class SimpleTemplateCache {
   private cacheDir: string;
+  private templatesDir: string;
+  private archivesDir: string;
+  private tempDir: string;
   public config: CacheConfig;
   private stats: CacheStats = {
     hitCount: 0,
@@ -39,10 +42,13 @@ export class SimpleTemplateCache {
       ...config,
     };
 
-    // Set cache directory
+    // Set cache directory structure
     this.cacheDir = this.config.location || this.getDefaultCacheDir();
+    this.templatesDir = path.join(this.cacheDir, "templates");
+    this.archivesDir = path.join(this.cacheDir, "archives");
+    this.tempDir = path.join(this.cacheDir, "temp");
 
-    // Initialize cache directory
+    // Initialize cache directory structure
     this.initializeCache();
   }
 
@@ -60,12 +66,38 @@ export class SimpleTemplateCache {
   }
 
   private initializeCache(): void {
-    if (!fs.existsSync(this.cacheDir)) {
-      fs.mkdirSync(this.cacheDir, { recursive: true });
+    // Create directory structure
+    const dirs = [this.cacheDir, this.templatesDir, this.archivesDir, this.tempDir];
+
+    for (const dir of dirs) {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
     }
+
+    // Clean up temp directory on startup
+    this.cleanTempDirectory();
 
     // Load cache stats
     this.loadStats();
+  }
+
+  private cleanTempDirectory(): void {
+    if (fs.existsSync(this.tempDir)) {
+      const files = fs.readdirSync(this.tempDir);
+      for (const file of files) {
+        const filePath = path.join(this.tempDir, file);
+        try {
+          if (fs.statSync(filePath).isDirectory()) {
+            fs.rmSync(filePath, { recursive: true, force: true });
+          } else {
+            fs.unlinkSync(filePath);
+          }
+        } catch (error) {
+          console.warn(`Failed to clean temp file ${file}:`, error);
+        }
+      }
+    }
   }
 
   private loadStats(): void {
@@ -76,6 +108,7 @@ export class SimpleTemplateCache {
         this.stats = JSON.parse(data);
       } catch (error) {
         console.warn("Failed to load cache stats:", error);
+        this.stats = { hitCount: 0, missCount: 0, totalSize: 0, cachedTemplates: [] };
       }
     }
   }
@@ -93,26 +126,29 @@ export class SimpleTemplateCache {
     templateName: string,
     templateUrl: string
   ): Promise<string> {
-    const cacheKey = this.getCacheKey(templateName, templateUrl);
-    const cacheFile = path.join(this.cacheDir, `${cacheKey}.tar.gz`);
-    const extractDir = path.join(this.cacheDir, templateName);
-
     if (!this.config.enabled) {
-      await this.downloadTemplate(templateName, templateUrl, cacheFile);
-      // Extract template after download
-      await this.extractTemplate(cacheFile, extractDir);
-      return extractDir;
+      return await this.downloadAndExtractTemplate(templateName, templateUrl);
     }
 
-    // Check if cached version exists and is valid
-    if (fs.existsSync(cacheFile) && this.isCacheValid(cacheFile)) {
-      console.log(`📦 Using cached template: ${templateName}`);
-      this.stats.hitCount++;
-      this.saveStats();
+    const cacheKey = this.getCacheKey(templateName, templateUrl);
+    const archiveFile = path.join(this.archivesDir, `${cacheKey}.tar.gz`);
+    const templateDir = path.join(this.templatesDir, cacheKey);
 
-      // Extract from cache
-      await this.extractTemplate(cacheFile, extractDir);
-      return extractDir;
+    // Check if cached version exists and is valid
+    if (fs.existsSync(archiveFile) && fs.existsSync(templateDir) && this.isCacheValid(archiveFile)) {
+      const specificTemplateDir = path.join(templateDir, templateName);
+      if (fs.existsSync(specificTemplateDir)) {
+        console.log(`📦 Using cached template: ${templateName}`);
+        this.stats.hitCount++;
+        this.saveStats();
+        return specificTemplateDir;
+      } else {
+        console.log(`📦 Template repository cached, but ${templateName} not found. Re-downloading...`);
+        // Template not found in cached repository, need to re-download
+        this.stats.missCount++;
+        this.saveStats();
+        return await this.downloadAndCacheTemplate(templateName, templateUrl, cacheKey, archiveFile, templateDir);
+      }
     }
 
     // Download and cache
@@ -120,14 +156,13 @@ export class SimpleTemplateCache {
     this.stats.missCount++;
     this.saveStats();
 
-    await this.downloadAndCache(templateName, templateUrl, cacheFile, extractDir);
-    return extractDir;
+    return await this.downloadAndCacheTemplate(templateName, templateUrl, cacheKey, archiveFile, templateDir);
   }
 
   private getCacheKey(templateName: string, templateUrl: string): string {
-    // Create a unique cache key based on template name and URL
+    // Create a cache key based only on URL hash, since all templates come from the same repository
     const urlHash = this.simpleHash(templateUrl);
-    return `${templateName}-${urlHash}`;
+    return `remote-templates-${urlHash}`;
   }
 
   private simpleHash(str: string): string {
@@ -137,7 +172,7 @@ export class SimpleTemplateCache {
       hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    return Math.abs(hash).toString(16);
+    return Math.abs(hash).toString(16).padStart(8, '0');
   }
 
   private isCacheValid(cacheFile: string): boolean {
@@ -150,18 +185,27 @@ export class SimpleTemplateCache {
     }
   }
 
-  private async downloadAndCache(
+  private async downloadAndCacheTemplate(
     templateName: string,
     templateUrl: string,
-    cacheFile: string,
-    extractDir: string
-  ): Promise<void> {
+    cacheKey: string,
+    archiveFile: string,
+    templateDir: string
+  ): Promise<string> {
     try {
-      // Download template
-      await this.downloadTemplate(templateName, templateUrl, cacheFile);
+      // Clean up existing template directory if it exists
+      if (fs.existsSync(templateDir)) {
+        fs.rmSync(templateDir, { recursive: true, force: true });
+      }
+
+      // Download template to temp location
+      const tempArchiveFile = await this.downloadTemplate(templateName, templateUrl);
+
+      // Copy to archive cache
+      fs.copyFileSync(tempArchiveFile, archiveFile);
 
       // Extract template
-      await this.extractTemplate(cacheFile, extractDir);
+      await this.extractTemplate(archiveFile, templateDir);
 
       // Update cached templates list
       if (!this.stats.cachedTemplates.includes(templateName)) {
@@ -169,10 +213,48 @@ export class SimpleTemplateCache {
         this.saveStats();
       }
 
+      // Update total size
+      this.updateTotalSize();
+
       // Clean up old cache if needed
       await this.cleanupCache();
+
+      return templateDir;
     } catch (error) {
       console.error("Failed to download and cache template:", error);
+      throw error;
+    } finally {
+      // Clean up temp files
+      this.cleanTempDirectory();
+    }
+  }
+
+  private async downloadAndExtractTemplate(
+    templateName: string,
+    templateUrl: string
+  ): Promise<string> {
+    const tempDir = path.join(this.tempDir, `download-${Date.now()}`);
+    fs.mkdirSync(tempDir, { recursive: true });
+
+    try {
+      // Download template
+      const archiveFile = await this.downloadTemplate(templateName, templateUrl, tempDir);
+
+      // Extract template
+      await this.extractTemplate(archiveFile, tempDir);
+
+      // Return the specific template subdirectory
+      const specificTemplateDir = path.join(tempDir, templateName);
+      if (fs.existsSync(specificTemplateDir)) {
+        return specificTemplateDir;
+      } else {
+        throw new Error(`Template '${templateName}' not found in downloaded repository. Available: ${fs.readdirSync(tempDir).filter(d => fs.statSync(path.join(tempDir, d)).isDirectory()).join(', ')}`);
+      }
+    } catch (error) {
+      // Clean up on error
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
       throw error;
     }
   }
@@ -180,22 +262,22 @@ export class SimpleTemplateCache {
   private async downloadTemplate(
     templateName: string,
     templateUrl: string,
-    savePath?: string
-  ): Promise<void> {
-    const tempDir = path.join(this.cacheDir, "temp");
+    targetDir?: string
+  ): Promise<string> {
+    const tempDir = targetDir || this.tempDir;
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    const tempFile = savePath || path.join(tempDir, `${templateName}-${Date.now()}.tar.gz`);
+    const tempFile = path.join(tempDir, `${templateName}-${Date.now()}.tar.gz`);
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       const request = https.get(templateUrl, (res) => {
         // Handle redirects
         if (res.statusCode === 301 || res.statusCode === 302) {
           const redirectUrl = res.headers.location;
           if (redirectUrl) {
-            this.downloadTemplate(templateName, redirectUrl, tempFile)
+            this.downloadTemplate(templateName, redirectUrl, tempDir)
               .then(resolve)
               .catch(reject);
             return;
@@ -212,7 +294,7 @@ export class SimpleTemplateCache {
 
         fileStream.on("finish", () => {
           fileStream.close();
-          resolve();
+          resolve(tempFile);
         });
 
         fileStream.on("error", (error) => {
@@ -230,21 +312,16 @@ export class SimpleTemplateCache {
 
       request.setTimeout(30000, () => {
         request.destroy();
-        reject(new Error("Download timeout after 30 seconds"));
+        reject(new Error("Download timeout"));
       });
     });
   }
 
-  private async extractTemplate(
-    archiveFile: string,
-    extractDir: string
-  ): Promise<void> {
+  private async extractTemplate(archiveFile: string, extractDir: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      if (fs.existsSync(extractDir)) {
-        fs.rmSync(extractDir, { recursive: true, force: true });
+      if (!fs.existsSync(extractDir)) {
+        fs.mkdirSync(extractDir, { recursive: true });
       }
-
-      fs.mkdirSync(extractDir, { recursive: true });
 
       fs.createReadStream(archiveFile)
         .pipe(
@@ -258,90 +335,167 @@ export class SimpleTemplateCache {
     });
   }
 
-  private async cleanupCache(): Promise<void> {
+  private updateTotalSize(): void {
     try {
-      const files = fs.readdirSync(this.cacheDir);
       let totalSize = 0;
-      const oldFiles: string[] = [];
+      const files = fs.readdirSync(this.archivesDir);
 
       for (const file of files) {
-        const filePath = path.join(this.cacheDir, file);
-        const stats = fs.statSync(filePath);
-
         if (file.endsWith(".tar.gz")) {
+          const filePath = path.join(this.archivesDir, file);
+          const stats = fs.statSync(filePath);
           totalSize += stats.size;
-          const cacheAge = Date.now() - stats.mtime.getTime();
-
-          // Remove files older than 7 days
-          if (cacheAge > 7 * 24 * 60 * 60 * 1000) {
-            oldFiles.push(filePath);
-          }
         }
       }
 
-      // Remove old files
-      for (const file of oldFiles) {
-        fs.unlinkSync(file);
-        console.log(`🧹 Cleaned up old cache file: ${path.basename(file)}`);
-      }
+      this.stats.totalSize = totalSize;
+    } catch (error) {
+      console.warn("Failed to update total size:", error);
+    }
+  }
 
-      // Remove extracted directories
-      const directories = files.filter(file =>
-        !file.endsWith('.tar.gz') &&
-        !file.endsWith('.json') &&
-        fs.statSync(path.join(this.cacheDir, file)).isDirectory()
-      );
-
-      for (const dir of directories) {
-        const dirPath = path.join(this.cacheDir, dir);
-        const stats = fs.statSync(dirPath);
-        const cacheAge = Date.now() - stats.mtime.getTime();
-
-        if (cacheAge > 7 * 24 * 60 * 60 * 1000) {
-          fs.rmSync(dirPath, { recursive: true, force: true });
-          console.log(`🧹 Cleaned up old cache directory: ${dir}`);
-        }
-      }
-
-      this.stats.totalSize = totalSize - oldFiles.reduce((sum, file) => {
-        return sum + fs.statSync(file).size;
-      }, 0);
-      this.saveStats();
-
+  private async cleanupCache(): Promise<void> {
+    try {
+      await this.cleanupOldArchives();
+      await this.cleanupUnusedTemplates();
+      await this.enforceSizeLimit();
     } catch (error) {
       console.warn("Cache cleanup failed:", error);
     }
   }
 
-  // Public methods for cache management
-  async clearCache(): Promise<void> {
-    if (fs.existsSync(this.cacheDir)) {
-      fs.rmSync(this.cacheDir, { recursive: true, force: true });
-      this.initializeCache();
-      console.log("🧹 Cache cleared successfully");
+  private async cleanupOldArchives(): Promise<void> {
+    const files = fs.readdirSync(this.archivesDir);
+    const oldFiles: string[] = [];
+
+    for (const file of files) {
+      if (file.endsWith(".tar.gz")) {
+        const filePath = path.join(this.archivesDir, file);
+        const stats = fs.statSync(filePath);
+        const cacheAge = Date.now() - stats.mtime.getTime();
+
+        // Remove files older than maxAge
+        if (cacheAge > this.config.maxAge) {
+          oldFiles.push(filePath);
+        }
+      }
+    }
+
+    // Remove old files
+    for (const file of oldFiles) {
+      try {
+        fs.unlinkSync(file);
+        console.log(`🧹 Cleaned up old archive: ${path.basename(file)}`);
+      } catch (error) {
+        console.warn(`Failed to clean up archive ${file}:`, error);
+      }
     }
   }
 
-  getCacheStats(): CacheStats {
-    return { ...this.stats };
+  private async cleanupUnusedTemplates(): Promise<void> {
+    // Get all valid cache keys from archives
+    const archives = fs.readdirSync(this.archivesDir).filter(file => file.endsWith(".tar.gz"));
+    const validKeys = archives.map(file => file.replace(".tar.gz", ""));
+
+    // Remove template directories that don't have corresponding archives
+    const templateDirs = fs.readdirSync(this.templatesDir);
+
+    for (const dir of templateDirs) {
+      if (!validKeys.includes(dir)) {
+        const dirPath = path.join(this.templatesDir, dir);
+        try {
+          fs.rmSync(dirPath, { recursive: true, force: true });
+          console.log(`🧹 Cleaned up unused template directory: ${dir}`);
+        } catch (error) {
+          console.warn(`Failed to clean up template directory ${dir}:`, error);
+        }
+      }
+    }
   }
 
+  private async enforceSizeLimit(): Promise<void> {
+    const files = fs.readdirSync(this.archivesDir)
+      .filter(file => file.endsWith(".tar.gz"))
+      .map(file => ({
+        name: file,
+        path: path.join(this.archivesDir, file),
+        stats: fs.statSync(path.join(this.archivesDir, file))
+      }))
+      .sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime()); // Sort by newest first
+
+    let totalSize = files.reduce((sum, file) => sum + file.stats.size, 0);
+
+    // Remove oldest files until under size limit
+    while (totalSize > this.config.maxSize && files.length > 1) {
+      const oldestFile = files.pop()!;
+
+      try {
+        fs.unlinkSync(oldestFile.path);
+        totalSize -= oldestFile.stats.size;
+        console.log(`🧹 Removed archive to enforce size limit: ${oldestFile.name}`);
+
+        // Also remove corresponding template directory
+        const templateDir = path.join(this.templatesDir, oldestFile.name.replace(".tar.gz", ""));
+        if (fs.existsSync(templateDir)) {
+          fs.rmSync(templateDir, { recursive: true, force: true });
+        }
+      } catch (error) {
+        console.warn(`Failed to remove archive ${oldestFile.name}:`, error);
+      }
+    }
+
+    this.updateTotalSize();
+  }
+
+  // Public methods
   getCacheDir(): string {
     return this.cacheDir;
   }
 
-  async warmCache(templateNames: string[], templateUrl: string): Promise<void> {
-    console.log("🔥 Warming up cache...");
+  getCacheStats(): CacheStats {
+    // Update total size before returning stats
+    this.updateTotalSize();
+    return { ...this.stats };
+  }
 
-    for (const templateName of templateNames) {
+  async clearCache(): Promise<void> {
+    try {
+      // Clear templates directory
+      if (fs.existsSync(this.templatesDir)) {
+        fs.rmSync(this.templatesDir, { recursive: true, force: true });
+        fs.mkdirSync(this.templatesDir, { recursive: true });
+      }
+
+      // Clear archives directory
+      if (fs.existsSync(this.archivesDir)) {
+        fs.rmSync(this.archivesDir, { recursive: true, force: true });
+        fs.mkdirSync(this.archivesDir, { recursive: true });
+      }
+
+      // Clear temp directory
+      this.cleanTempDirectory();
+
+      // Reset stats
+      this.stats = { hitCount: 0, missCount: 0, totalSize: 0, cachedTemplates: [] };
+      this.saveStats();
+
+      console.log("🧹 Cache cleared successfully");
+    } catch (error) {
+      console.error("Failed to clear cache:", error);
+      throw error;
+    }
+  }
+
+  async warmCache(templates: string[], templateUrl: string): Promise<void> {
+    console.log("🔥 Warming cache with templates:", templates.join(", "));
+
+    for (const template of templates) {
       try {
-        await this.getTemplate(templateName, templateUrl);
-        console.log(`✅ Cached template: ${templateName}`);
+        await this.getTemplate(template, templateUrl);
+        console.log(`✅ Cached template: ${template}`);
       } catch (error) {
-        console.warn(`Failed to cache template ${templateName}:`, error);
+        console.warn(`Failed to cache template ${template}:`, error);
       }
     }
-
-    console.log("🔥 Cache warming completed");
   }
 }
