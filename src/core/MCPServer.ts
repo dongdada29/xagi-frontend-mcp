@@ -54,7 +54,7 @@ export class MCPServer {
     return [
       {
         name: "create_frontend",
-        description: "为 AI Agent 提供前端工程初始化工具。使用 React+Next.js 模板在当前目录创建现代化前端项目。",
+        description: "为 AI Agent 提供前端工程初始化工具。使用 React+Next.js 模板在当前目录创建现代化前端项目。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
           type: "object",
           properties: {
@@ -66,7 +66,7 @@ export class MCPServer {
             },
             projectName: {
               type: "string",
-              description: "Name of the project directory to create (default: current directory name)",
+              description: "Name of the project directory to create (optional, if not specified will create in current directory)",
             },
             placeholders: {
               type: "object",
@@ -84,13 +84,13 @@ export class MCPServer {
       },
       {
         name: "create_react_app",
-        description: "AI Agent 专用工具：一键创建 React+Next.js 现代化项目，使用最佳默认配置和远程模板",
+        description: "AI Agent 专用工具：一键创建 React+Next.js 现代化项目，使用最佳默认配置和远程模板。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
           type: "object",
           properties: {
             projectName: {
               type: "string",
-              description: "Project name (default: current directory name)",
+              description: "Project name (optional, if not specified will create in current directory)",
             },
             port: {
               type: "string",
