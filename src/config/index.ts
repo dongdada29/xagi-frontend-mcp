@@ -21,7 +21,7 @@ export interface TemplateConfig {
 
 export const SERVER_CONFIG: ServerConfig = {
   name: "xagi-frontend-mcp",
-  version: "0.1.0",
+  version: "1.0.2",
   capabilities: { tools: {} }
 };
 
