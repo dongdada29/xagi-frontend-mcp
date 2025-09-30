@@ -103,7 +103,7 @@ function main() {
     };
   } else {
     // stdio模式 (默认)
-    serverPath = path.join(__dirname, "../src/index.js");
+    serverPath = path.join(__dirname, "../dist/index.js");
     serverArgs = [];
     serverEnv = {
       ...process.env,
