@@ -48,7 +48,7 @@ npm install -g xagi-frontend-mcp
 
 ### 在 Claude Desktop 中使用
 
-#### 使用 NPX（推荐）
+#### 在 Claude Desktop 中配置
 
 1. 打开 Claude Desktop 设置
 2. 添加 MCP 服务器配置：
@@ -58,7 +58,19 @@ npm install -g xagi-frontend-mcp
   "mcpServers": {
     "xagi-frontend-mcp": {
       "command": "npx",
-      "args": ["xagi-frontend-mcp"]
+      "args": [
+        "xagi-frontend-mcp@latest",
+        "--mcp"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "description": "XAGI Frontend MCP - Create standardized frontend projects from templates",
+      "capabilities": {
+        "tools": true,
+        "resources": true,
+        "prompts": true
+      }
     }
   }
 }
@@ -110,7 +122,19 @@ npx xagi-frontend-mcp --http --dev
   "mcpServers": {
     "xagi-frontend-mcp": {
       "command": "npx",
-      "args": ["xagi-frontend-mcp"]
+      "args": [
+        "xagi-frontend-mcp@latest",
+        "--mcp"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "description": "XAGI Frontend MCP - Create standardized frontend projects from templates",
+      "capabilities": {
+        "tools": true,
+        "resources": true,
+        "prompts": true
+      }
     }
   }
 }
@@ -119,8 +143,8 @@ npx xagi-frontend-mcp --http --dev
 #### 命令行使用
 
 ```bash
-# 在 Claude Code 中直接使用
-claude mcp add xagi-frontend -- npx xagi-frontend-mcp
+# 在 Claude Code 中直接使用（推荐配置）
+claude mcp add xagi-frontend -- npx xagi-frontend-mcp@latest --mcp
 
 # 或者使用全局安装
 claude mcp add xagi-frontend -- xagi-frontend-mcp
@@ -268,16 +292,19 @@ Claude: 根据您的需求，我推荐使用 React + Next.js 模板，它完全�
 # 1. 使用 NPX 直接运行 (stdio 模式)
 npx xagi-frontend-mcp
 
-# 2. 启动 HTTP 服务器模式
+# 2. 使用 NPX 运行最新版本 (推荐)
+npx xagi-frontend-mcp@latest
+
+# 3. 启动 HTTP 服务器模式
 npx xagi-frontend-mcp --http
 
-# 3. 查看帮助信息
+# 4. 查看帮助信息
 npx xagi-frontend-mcp --help
 
-# 4. 开发模式（详细日志）
+# 5. 开发模式（详细日志）
 npx xagi-frontend-mcp --dev
 
-# 5. 全局安装后使用
+# 6. 全局安装后使用
 npm install -g xagi-frontend-mcp
 xagi-frontend-mcp --version
 ```
