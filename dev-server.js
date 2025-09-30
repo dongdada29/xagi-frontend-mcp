@@ -176,7 +176,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
         content: [
           {
             type: "text",
-            text: `✅ ${projectName} created successfully.\n🚀  Next steps:\n   cd ${projectName}\n   npm run dev`,
+            text: `✅ ${projectName} created successfully.\n🚀  Next steps:\n   cd ${projectName}\n   Start development server using your package manager`,
           },
         ],
       };

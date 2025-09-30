@@ -35,7 +35,8 @@ export class TemplateService {
     projectName?: string,
     placeholders: PlaceholderValues = {},
     useRemote: boolean = false,
-    port?: string
+    port?: string,
+    autoInstall: boolean = false
   ): Promise<string> {
     // Validate template
     if (!TEMPLATE_CONFIG.enum.includes(template)) {
@@ -80,11 +81,14 @@ export class TemplateService {
       // Replace placeholders
       PlaceholderReplacer.replaceRecursively(targetDir, placeholders);
 
-      // Install dependencies
-      await NpmInstaller.install(targetDir);
+      // Install dependencies (optional)
+      if (autoInstall) {
+        await NpmInstaller.install(targetDir);
+      }
 
       const displayName = projectName || "current directory";
-      return `✅ Project created successfully in ${displayName}.\n🚀  Next steps:\n   ${projectName ? `cd ${projectName}` : ''}npm run dev`;
+      const installStep = autoInstall ? '' : 'Install dependencies using your package manager\n   ';
+      return `✅ Project created successfully in ${displayName}.\n🚀  Next steps:\n   ${projectName ? `cd ${projectName}` : ''}${installStep}Start development server using your package manager`;
     } catch (error) {
       // Clean up on failure
       if (projectName) {

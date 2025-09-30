@@ -78,6 +78,11 @@ export class MCPServer {
               description: "Whether to download template from remote repository (default: false)",
               default: false,
             },
+            autoInstall: {
+              type: "boolean",
+              description: "Whether to automatically install dependencies (default: false)",
+              default: false,
+            },
           },
           required: [],
         },
@@ -100,6 +105,11 @@ export class MCPServer {
               type: "boolean",
               description: "Use remote template (default: true for latest features)",
               default: true,
+            },
+            autoInstall: {
+              type: "boolean",
+              description: "Whether to automatically install dependencies (default: false)",
+              default: false,
             },
           },
           required: [],
@@ -210,7 +220,8 @@ export class MCPServer {
       projectName,
       placeholders = {},
       useRemote = false,
-      port
+      port,
+      autoInstall = false
     } = args;
 
     const result = await this.templateService.createFrontendProject(
@@ -218,7 +229,8 @@ export class MCPServer {
       projectName,
       placeholders,
       useRemote,
-      port
+      port,
+      autoInstall
     );
 
     return {
@@ -227,7 +239,7 @@ export class MCPServer {
   }
 
   private async handleCreateReactApp(args: CreateReactAppArgs) {
-    const { projectName, port, useRemote = true } = args;
+    const { projectName, port, useRemote = true, autoInstall = false } = args;
 
     // Force react-next template with remote download
     const result = await this.templateService.createFrontendProject(
@@ -235,7 +247,8 @@ export class MCPServer {
       projectName,
       {},
       useRemote,
-      port
+      port,
+      autoInstall
     );
 
     return {

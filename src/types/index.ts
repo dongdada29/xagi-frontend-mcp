@@ -22,12 +22,14 @@ export interface CreateFrontendArgs {
   placeholders?: PlaceholderValues;
   useRemote?: boolean;
   port?: string;
+  autoInstall?: boolean;
 }
 
 export interface CreateReactAppArgs {
   projectName?: string;
   port?: string;
   useRemote?: boolean;
+  autoInstall?: boolean;
 }
 
 export interface DownloadTemplateArgs {
