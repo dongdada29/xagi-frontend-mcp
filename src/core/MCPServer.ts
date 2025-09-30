@@ -16,7 +16,7 @@ import {
   DownloadTemplateArgs,
   CacheInfoArgs,
   CacheClearArgs,
-  CacheWarmArgs
+  CacheWarmArgs,
 } from "../types/index.js";
 
 export class MCPServer {
@@ -24,7 +24,9 @@ export class MCPServer {
   private templateService: TemplateService;
 
   constructor(cacheDir?: string) {
-    this.server = new Server(SERVER_CONFIG as any, { capabilities: { tools: {} } });
+    this.server = new Server(SERVER_CONFIG as any, {
+      capabilities: { tools: {} },
+    });
     this.templateService = new TemplateService(cacheDir);
     this.setupHandlers();
   }
@@ -36,7 +38,7 @@ export class MCPServer {
   private setupHandlers(): void {
     // List available tools
     this.server.setRequestHandler(ListToolsRequestSchema, () => ({
-      tools: this.getToolDefinitions()
+      tools: this.getToolDefinitions(),
     }));
 
     // Handle tool calls
@@ -54,7 +56,8 @@ export class MCPServer {
     return [
       {
         name: "create_frontend",
-        description: "为 AI Agent 提供前端工程初始化工具。使用 React+Next.js 模板在当前目录创建现代化前端项目。如果 projectName 不指定，将在当前目录创建项目",
+        description:
+          "为 AI Agent 提供前端工程初始化工具。使用 React+Next.js 模板在当前目录创建现代化前端项目。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
           type: "object",
           properties: {
@@ -66,21 +69,25 @@ export class MCPServer {
             },
             projectName: {
               type: "string",
-              description: "Name of the project directory to create (optional, if not specified will create in current directory)",
+              description:
+                "Name of the project directory to create (optional, if not specified will create in current directory)",
             },
             placeholders: {
               type: "object",
               additionalProperties: true,
-              description: "Key-value pairs to replace in template files (format: ${{key}}). Common placeholders: projectName, description, port (default varies by template)",
+              description:
+                "Key-value pairs to replace in template files (format: ${{key}}). Common placeholders: projectName, description, port (default varies by template)",
             },
             useRemote: {
               type: "boolean",
-              description: "Whether to download template from remote repository (default: false)",
+              description:
+                "Whether to download template from remote repository (default: false)",
               default: false,
             },
             autoInstall: {
               type: "boolean",
-              description: "Whether to automatically install dependencies (default: false)",
+              description:
+                "Whether to automatically install dependencies (default: false)",
               default: false,
             },
           },
@@ -89,13 +96,15 @@ export class MCPServer {
       },
       {
         name: "create_react_app",
-        description: "AI Agent 专用工具：一键创建 React+Next.js 现代化项目，使用最佳默认配置和远程模板。如果 projectName 不指定，将在当前目录创建项目",
+        description:
+          "AI Agent 专用工具：一键创建 React+Next.js 现代化项目，使用最佳默认配置和远程模板。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
           type: "object",
           properties: {
             projectName: {
               type: "string",
-              description: "Project name (optional, if not specified will create in current directory)",
+              description:
+                "Project name (optional, if not specified will create in current directory)",
             },
             port: {
               type: "string",
@@ -103,12 +112,14 @@ export class MCPServer {
             },
             useRemote: {
               type: "boolean",
-              description: "Use remote template (default: true for latest features)",
+              description:
+                "Use remote template (default: true for latest features)",
               default: true,
             },
             autoInstall: {
               type: "boolean",
-              description: "Whether to automatically install dependencies (default: false)",
+              description:
+                "Whether to automatically install dependencies (default: false)",
               default: false,
             },
           },
@@ -221,7 +232,7 @@ export class MCPServer {
       placeholders = {},
       useRemote = false,
       port,
-      autoInstall = false
+      autoInstall = false,
     } = args;
 
     const result = await this.templateService.createFrontendProject(
@@ -234,7 +245,7 @@ export class MCPServer {
     );
 
     return {
-      content: [{ type: "text", text: result }]
+      content: [{ type: "text", text: result }],
     };
   }
 
@@ -252,7 +263,7 @@ export class MCPServer {
     );
 
     return {
-      content: [{ type: "text", text: result }]
+      content: [{ type: "text", text: result }],
     };
   }
 
@@ -276,7 +287,9 @@ export class MCPServer {
       };
     } catch (error) {
       throw new Error(
-        `Failed to download template: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to download template: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }
@@ -291,7 +304,9 @@ export class MCPServer {
           text: `📋 可用模板列表:\n\n${templates
             .map(
               (t) =>
-                `• ${t.name}\n  ${t.description}\n  特性: ${t.features.join(", ")}\n`
+                `• ${t.name}\n  ${t.description}\n  特性: ${t.features.join(
+                  ", "
+                )}\n`
             )
             .join("\n")}`,
         },
@@ -316,7 +331,15 @@ export class MCPServer {
 📈 Cache Statistics:
    Cache Hits: ${cacheInfo.stats.hitCount}
    Cache Misses: ${cacheInfo.stats.missCount}
-   Hit Rate: ${cacheInfo.stats.hitCount + cacheInfo.stats.missCount > 0 ? Math.round((cacheInfo.stats.hitCount / (cacheInfo.stats.hitCount + cacheInfo.stats.missCount)) * 100) : 0}%
+   Hit Rate: ${
+     cacheInfo.stats.hitCount + cacheInfo.stats.missCount > 0
+       ? Math.round(
+           (cacheInfo.stats.hitCount /
+             (cacheInfo.stats.hitCount + cacheInfo.stats.missCount)) *
+             100
+         )
+       : 0
+   }%
    Total Size: ${Math.round(cacheInfo.stats.totalSize / (1024 * 1024))} MB
    Cached Templates: ${cacheInfo.stats.cachedTemplates.join(", ") || "None"}
 
@@ -349,7 +372,9 @@ export class MCPServer {
       };
     } catch (error) {
       throw new Error(
-        `Failed to clear cache: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to clear cache: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }
@@ -364,13 +389,17 @@ export class MCPServer {
         content: [
           {
             type: "text",
-            text: `✅ Cache warming completed\n\nTemplates cached: ${templates.join(", ")}\n\nThese templates are now available for offline use.`,
+            text: `✅ Cache warming completed\n\nTemplates cached: ${templates.join(
+              ", "
+            )}\n\nThese templates are now available for offline use.`,
           },
         ],
       };
     } catch (error) {
       throw new Error(
-        `Failed to warm cache: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to warm cache: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }

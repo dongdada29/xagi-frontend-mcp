@@ -61,7 +61,7 @@ export class TemplateService {
     }
 
     // Validate target directory
-    const { targetDir, validationError } = FileManager.validateTargetDirectory(projectName);
+    const { targetDir, validationError } = FileManager.validateTargetDirectory(projectName, true);
     if (validationError) {
       throw new Error(validationError);
     }
@@ -88,7 +88,7 @@ export class TemplateService {
 
       const displayName = projectName || "current directory";
       const installStep = autoInstall ? '' : 'Install dependencies using your package manager\n   ';
-      return `✅ Project created successfully in ${displayName}.\n🚀  Next steps:\n   ${projectName ? `cd ${projectName}` : ''}${installStep}Start development server using your package manager`;
+      return `✅ Project created successfully in ${displayName}.\n🚀  Next steps:\n   ${projectName ? `cd ${projectName}` : ''}${installStep} Start development server using your package manager`;
     } catch (error) {
       // Clean up on failure
       if (projectName) {

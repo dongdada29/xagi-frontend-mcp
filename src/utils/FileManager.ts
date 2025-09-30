@@ -43,7 +43,7 @@ export class FileManager {
    * Validate target directory for project creation
    * 验证项目创建的目标目录
    */
-  static validateTargetDirectory(projectName?: string): { targetDir: string; validationError?: string } {
+  static validateTargetDirectory(projectName?: string, allowCurrentDirNotEmpty: boolean = false): { targetDir: string; validationError?: string } {
     const targetDir = projectName ? path.resolve(projectName) : process.cwd();
 
     if (projectName && !fs.existsSync(targetDir)) {
@@ -54,10 +54,13 @@ export class FileManager {
     const isEmpty = this.isDirectoryEmpty(targetDir);
 
     if (!isEmpty) {
-      const error = projectName
-        ? `Directory ${projectName} already exists and is not empty`
-        : "Current directory is not empty. Please specify a project name or use an empty directory.";
-      return { targetDir, validationError: error };
+      // Only validate if not using current directory or if current directory should be empty
+      if (projectName || !allowCurrentDirNotEmpty) {
+        const error = projectName
+          ? `Directory ${projectName} already exists and is not empty`
+          : "Current directory is not empty. Please specify a project name or use an empty directory.";
+        return { targetDir, validationError: error };
+      }
     }
 
     return { targetDir };
