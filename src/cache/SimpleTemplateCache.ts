@@ -136,7 +136,14 @@ export class SimpleTemplateCache {
 
     // Check if cached version exists and is valid
     if (fs.existsSync(archiveFile) && fs.existsSync(templateDir) && this.isCacheValid(archiveFile)) {
-      const specificTemplateDir = path.join(templateDir, templateName);
+      // Try monorepo structure first (packages/templateName)
+      let specificTemplateDir = path.join(templateDir, "packages", templateName);
+
+      // If not found in packages/, try old structure (templateName directly)
+      if (!fs.existsSync(specificTemplateDir)) {
+        specificTemplateDir = path.join(templateDir, templateName);
+      }
+
       if (fs.existsSync(specificTemplateDir)) {
         console.log(`📦 Using cached template: ${templateName}`);
         this.stats.hitCount++;
@@ -207,6 +214,9 @@ export class SimpleTemplateCache {
       // Extract template
       await this.extractTemplate(archiveFile, templateDir);
 
+      // Find the specific template directory (monorepo or single)
+      const specificTemplateDir = this.findTemplateDirectory(templateDir, templateName);
+
       // Update cached templates list
       if (!this.stats.cachedTemplates.includes(templateName)) {
         this.stats.cachedTemplates.push(templateName);
@@ -219,7 +229,7 @@ export class SimpleTemplateCache {
       // Clean up old cache if needed
       await this.cleanupCache();
 
-      return templateDir;
+      return specificTemplateDir;
     } catch (error) {
       console.error("Failed to download and cache template:", error);
       throw error;
@@ -227,6 +237,54 @@ export class SimpleTemplateCache {
       // Clean up temp files
       this.cleanTempDirectory();
     }
+  }
+
+  private findTemplateDirectory(templateDir: string, templateName: string): string {
+    // Try monorepo structure first (packages/templateName)
+    let specificTemplateDir = path.join(templateDir, "packages", templateName);
+
+    // If not found in packages/, try old structure (templateName directly)
+    if (!fs.existsSync(specificTemplateDir)) {
+      specificTemplateDir = path.join(templateDir, templateName);
+    }
+
+    if (fs.existsSync(specificTemplateDir)) {
+      return specificTemplateDir;
+    }
+
+    throw new Error(`Template '${templateName}' not found in cache. Available: ${this.getAvailableTemplates(templateDir)}`);
+  }
+
+  private getAvailableTemplates(templateDir: string): string {
+    const packageDir = path.join(templateDir, "packages");
+    let templates: string[] = [];
+
+    if (fs.existsSync(packageDir)) {
+      // Monorepo structure - list packages
+      try {
+        const packages = fs.readdirSync(packageDir).filter(p =>
+          fs.statSync(path.join(packageDir, p)).isDirectory()
+        );
+        templates = packages.map(p => `packages/${p}`);
+      } catch (error) {
+        console.warn("Failed to read packages directory:", error);
+      }
+    }
+
+    // Also check root directory templates
+    try {
+      const rootDirs = fs.readdirSync(templateDir).filter(d => {
+        const dirPath = path.join(templateDir, d);
+        return fs.statSync(dirPath).isDirectory() &&
+               d !== "packages" &&
+               fs.existsSync(path.join(dirPath, "package.json"));
+      });
+      templates.push(...rootDirs);
+    } catch (error) {
+      console.warn("Failed to read root directory:", error);
+    }
+
+    return templates.join(", ") || "None";
   }
 
   private async downloadAndExtractTemplate(
@@ -243,12 +301,35 @@ export class SimpleTemplateCache {
       // Extract template
       await this.extractTemplate(archiveFile, tempDir);
 
-      // Return the specific template subdirectory
-      const specificTemplateDir = path.join(tempDir, templateName);
+      // Try monorepo structure first (packages/templateName)
+      let specificTemplateDir = path.join(tempDir, "packages", templateName);
+
+      // If not found in packages/, try old structure (templateName directly)
+      if (!fs.existsSync(specificTemplateDir)) {
+        specificTemplateDir = path.join(tempDir, templateName);
+      }
+
       if (fs.existsSync(specificTemplateDir)) {
         return specificTemplateDir;
       } else {
-        throw new Error(`Template '${templateName}' not found in downloaded repository. Available: ${fs.readdirSync(tempDir).filter(d => fs.statSync(path.join(tempDir, d)).isDirectory()).join(', ')}`);
+        const availableDirs = fs.readdirSync(tempDir).filter(d => fs.statSync(path.join(tempDir, d)).isDirectory());
+        const packageDirs = [];
+        const rootDirs = [];
+
+        for (const dir of availableDirs) {
+          const dirPath = path.join(tempDir, dir);
+          if (fs.existsSync(path.join(dirPath, "package.json"))) {
+            // Check if this is a packages directory
+            if (dir === "packages") {
+              const subDirs = fs.readdirSync(dirPath).filter(subDir => fs.statSync(path.join(dirPath, subDir)).isDirectory());
+              packageDirs.push(...subDirs.map(subDir => `packages/${subDir}`));
+            } else {
+              rootDirs.push(dir);
+            }
+          }
+        }
+
+        throw new Error(`Template '${templateName}' not found in downloaded repository.\nAvailable:\n  Root directories: ${rootDirs.join(', ')}\n  Package directories: ${packageDirs.join(', ')}`);
       }
     } catch (error) {
       // Clean up on error

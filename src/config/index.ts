@@ -21,7 +21,7 @@ export interface TemplateConfig {
 
 export const SERVER_CONFIG: ServerConfig = {
   name: "xagi-frontend-mcp",
-  version: "1.0.2",
+  version: "1.0.5",
   capabilities: { tools: {} }
 };
 
@@ -45,7 +45,7 @@ export const MONOREPO_CONFIG = {
       "package": "@xagi-templates/react-next",
       "path": "packages/react-next",
       "port": "3000",
-      "description": "{{description}}"
+      "description": "React + Next.js + TypeScript + Tailwind CSS 模板 - 基于 Next.js 14 的全栈应用开发模板"
     },
     "react-vite": {
       "name": "react-vite",

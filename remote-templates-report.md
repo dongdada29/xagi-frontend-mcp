@@ -1,6 +1,6 @@
 # Remote Templates Analysis Report
 
-Generated: 2025-09-30T04:51:58.796Z
+Generated: 2025-09-30T05:44:06.631Z
 
 ## Summary
 
@@ -13,8 +13,8 @@ Generated: 2025-09-30T04:51:58.796Z
 ### @xagi-templates/react-next
 
 - **Name**: react-next
-- **Version**: {{version}}
-- **Description**: {{description}}
+- **Version**: 1.0.0
+- **Description**: React + Next.js + TypeScript + Tailwind CSS 模板 - 基于 Next.js 14 的全栈应用开发模板
 - **Path**: /Users/a1234/www/xagi-frontend-mcp/remote-templates/packages/react-next
 - **Scripts**: dev, dev:turbo, build, build:production, start, start:production, lint, lint:fix, type-check, type-check:watch, clean, prebuild, format, format:check, test, test:watch, test:coverage, check:deps, check:outdated, update:deps, clean:deps
 - **Dependencies**: 15
@@ -28,7 +28,7 @@ Generated: 2025-09-30T04:51:58.796Z
 - **Path**: /Users/a1234/www/xagi-frontend-mcp/remote-templates/packages/react-vite
 - **Scripts**: dev, build, build:production, preview, preview:production, lint, lint:fix, type-check, type-check:watch, clean, prebuild, format, format:check
 - **Dependencies**: 3
-- **Dev Dependencies**: 10
+- **Dev Dependencies**: 11
 
 ### @xagi-templates/vue3-vite
 
