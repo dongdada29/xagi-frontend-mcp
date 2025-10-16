@@ -1,6 +1,6 @@
 {
   "name": "xagi-frontend-mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "为 AI Agent 提供前端工程初始化能力的 MCP 工具，支持 React + Next.js、React + Vite、Vue3 + Vite 等现代化技术栈",
   "main": "dist/index.js",
   "type": "module",
