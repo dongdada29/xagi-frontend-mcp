@@ -50,6 +50,14 @@ export interface CacheWarmArgs {
   templateUrl?: string;
 }
 
+export interface InitTemplateArgs {
+  template?: string;
+  projectPath?: string;
+  placeholders?: PlaceholderValues;
+  useRemote?: boolean;
+  autoInstall?: boolean;
+}
+
 export interface TemplateInfo {
   name: string;
   description: string;

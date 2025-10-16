@@ -245,4 +245,99 @@ export class TemplateService {
 
     return targetDir;
   }
+
+  /**
+   * Initialize template in specified project path
+   * 在指定的项目路径中初始化模板
+   */
+  async initTemplate(
+    template: string = TEMPLATE_CONFIG.default,
+    projectPath?: string,
+    placeholders: PlaceholderValues = {},
+    useRemote: boolean = false,
+    autoInstall: boolean = false
+  ): Promise<string> {
+    // 从环境变量获取项目路径，如果没有提供的话
+    const targetPath = projectPath || process.env.projectPath;
+
+    if (!targetPath) {
+      throw new Error("项目路径未指定。请提供 projectPath 参数或设置 projectPath 环境变量。");
+    }
+
+    // 验证模板
+    if (!TEMPLATE_CONFIG.enum.includes(template)) {
+      throw new Error(`无效的模板: ${template}。可用模板: ${TEMPLATE_CONFIG.enum.join(", ")}`);
+    }
+
+    // 设置默认端口
+    if (!placeholders.port) {
+      if (this.monorepoConfig.enabled && this.monorepoConfig.templates[template]) {
+        placeholders.port = this.monorepoConfig.templates[template].port;
+      } else {
+        placeholders.port = DEFAULT_PORT_CONFIG[template as keyof typeof DEFAULT_PORT_CONFIG] || "3000";
+      }
+    }
+
+    // 设置智能默认值
+    if (!placeholders.projectName) {
+      const pathName = path.basename(targetPath);
+      placeholders.projectName = PlaceholderReplacer.generateProjectName(pathName);
+    }
+    if (!placeholders.description) {
+      placeholders.description = PlaceholderReplacer.getDefaultDescription(template);
+    }
+
+    // 验证目标目录
+    if (!fs.existsSync(targetPath)) {
+      throw new Error(`目标路径不存在: ${targetPath}`);
+    }
+
+    // 检查目录是否为空
+    const files = fs.readdirSync(targetPath);
+    if (files.length > 0) {
+      throw new Error(`目标目录不为空: ${targetPath}。请选择一个空目录或清空现有内容。`);
+    }
+
+    try {
+      // 优先使用本地缓存的模板
+      let sourceDir: string;
+      let templateSource: string;
+
+      try {
+        // 首先尝试从缓存获取模板
+        sourceDir = await this.templateCache.getTemplate(template, TEMPLATE_CONFIG.remoteUrl);
+        templateSource = 'cached';
+        console.log(`📦 Using cached template: ${template}`);
+      } catch (cacheError) {
+        // 如果缓存中没有，则根据 useRemote 参数决定是否下载
+        if (useRemote) {
+          sourceDir = await this.getTemplateSource(template, true);
+          templateSource = 'remote';
+          console.log(`🌐 Using remote template: ${template}`);
+        } else {
+          // 尝试使用本地模板
+          sourceDir = await this.getTemplateSource(template, false);
+          templateSource = 'local';
+          console.log(`📁 Using local template: ${template}`);
+        }
+      }
+
+      // 复制模板文件
+      FileManager.copyTemplateFiles(sourceDir, targetPath, undefined, templateSource === 'remote' ? template : undefined);
+
+      // 替换占位符
+      PlaceholderReplacer.replaceRecursively(targetPath, placeholders);
+
+      // 安装依赖（可选）
+      if (autoInstall) {
+        await NpmInstaller.install(targetPath);
+      }
+
+      const installStep = autoInstall ? '' : '安装依赖项\n   ';
+      const sourceInfo = templateSource === 'cached' ? '（使用本地缓存）' : templateSource === 'remote' ? '（使用远程模板）' : '（使用本地模板）';
+      return `✅ 模板 ${template} 已成功初始化到 ${targetPath}${sourceInfo}。\n🚀 下一步:\n   ${installStep}使用您的包管理器启动开发服务器`;
+    } catch (error) {
+      throw new Error(`初始化模板失败: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
 }

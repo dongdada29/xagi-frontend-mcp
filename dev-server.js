@@ -70,7 +70,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "download_template",
+        name: "xagi_download_template",
         description: "Download a template from remote repository",
         inputSchema: {
           type: "object",
@@ -88,7 +88,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: "list_templates",
+        name: "xagi_list_templates",
         description: "List available templates from remote repository",
         inputSchema: {
           type: "object",
@@ -188,7 +188,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
       }
       throw error;
     }
-  } else if (name === "download_template") {
+  } else if (name === "xagi_download_template") {
     const { template, templateUrl } = args as {
       template: string;
       templateUrl?: string;
@@ -226,7 +226,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
         }`
       );
     }
-  } else if (name === "list_templates") {
+  } else if (name === "xagi_list_templates") {
     log('📋 列出模板');
     const templates = [
       {

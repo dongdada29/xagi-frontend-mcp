@@ -17,6 +17,7 @@ import {
   CacheInfoArgs,
   CacheClearArgs,
   CacheWarmArgs,
+  InitTemplateArgs,
 } from "../types/index.js";
 
 export class MCPServer {
@@ -52,7 +53,7 @@ export class MCPServer {
    * Get tool definitions
    * 获取工具定义
    */
-  private getToolDefinitions() {
+  getToolDefinitions() {
     return [
       {
         name: "xagi_create_frontend",
@@ -197,6 +198,41 @@ export class MCPServer {
           },
         },
       },
+      {
+        name: "xagi_init_template",
+        description: "AI Agent 工具：在指定项目路径中初始化模板。使用环境变量 projectPath 或提供 projectPath 参数来指定目标目录。默认使用 react-vite 模板。",
+        inputSchema: {
+          type: "object",
+          properties: {
+            template: {
+              type: "string",
+              enum: TEMPLATE_CONFIG.enum,
+              description: `Template to use for the project (default: ${TEMPLATE_CONFIG.default})`,
+              default: TEMPLATE_CONFIG.default,
+            },
+            projectPath: {
+              type: "string",
+              description: "Target project path where template will be initialized (optional, can use projectPath environment variable)",
+            },
+            placeholders: {
+              type: "object",
+              additionalProperties: true,
+              description: "Key-value pairs to replace in template files (format: ${{key}}). Common placeholders: projectName, description, port",
+            },
+            useRemote: {
+              type: "boolean",
+              description: "Whether to download template from remote repository (default: false)",
+              default: false,
+            },
+            autoInstall: {
+              type: "boolean",
+              description: "Whether to automatically install dependencies (default: false)",
+              default: false,
+            },
+          },
+          required: [],
+        },
+      },
     ];
   }
 
@@ -204,7 +240,7 @@ export class MCPServer {
    * Handle tool calls
    * 处理工具调用
    */
-  private async handleToolCall(name: string, args: any) {
+  async handleToolCall(name: string, args: any) {
     switch (name) {
       case "xagi_create_frontend":
         return await this.handleCreateFrontend(args as CreateFrontendArgs);
@@ -220,6 +256,8 @@ export class MCPServer {
         return await this.handleCacheClear(args as CacheClearArgs);
       case "xagi_cache_warm":
         return await this.handleCacheWarm(args as CacheWarmArgs);
+      case "xagi_init_template":
+        return await this.handleInitTemplate(args as InitTemplateArgs);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -398,6 +436,36 @@ export class MCPServer {
     } catch (error) {
       throw new Error(
         `Failed to warm cache: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  private async handleInitTemplate(args: InitTemplateArgs) {
+    const {
+      template = TEMPLATE_CONFIG.default,
+      projectPath,
+      placeholders = {},
+      useRemote = false,
+      autoInstall = false,
+    } = args;
+
+    try {
+      const result = await this.templateService.initTemplate(
+        template,
+        projectPath,
+        placeholders,
+        useRemote,
+        autoInstall
+      );
+
+      return {
+        content: [{ type: "text", text: result }],
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to initialize template: ${
           error instanceof Error ? error.message : String(error)
         }`
       );
