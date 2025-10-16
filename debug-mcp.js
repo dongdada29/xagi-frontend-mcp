@@ -69,7 +69,7 @@ setTimeout(() => {
   setTimeout(() => {
     // 测试 2: 列出模板
     sendRequest("tools/call", {
-      name: "list_templates",
+      name: "xagi_list_templates",
       arguments: {},
     });
   }, 1000);
@@ -77,7 +77,7 @@ setTimeout(() => {
   setTimeout(() => {
     // 测试 3: 下载模板
     sendRequest("tools/call", {
-      name: "download_template",
+      name: "xagi_download_template",
       arguments: {
         template: "react-vite",
       },
@@ -87,7 +87,7 @@ setTimeout(() => {
   setTimeout(() => {
     // 测试 4: 创建项目（使用本地模板）
     sendRequest("tools/call", {
-      name: "create_frontend",
+      name: "xagi_create_frontend",
       arguments: {
         template: "react-vite",
         projectName: "debug-test-project",
@@ -103,7 +103,7 @@ setTimeout(() => {
   setTimeout(() => {
     // 测试 5: 创建项目（使用远程模板）
     sendRequest("tools/call", {
-      name: "create_frontend",
+      name: "xagi_create_frontend",
       arguments: {
         template: "react-vite",
         projectName: "debug-remote-project",

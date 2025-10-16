@@ -61,7 +61,7 @@ claude mcp add xagi-frontend-template --env NODE_ENV=production -- npx xagi-fron
 
 Claude: 我将在当前目录创建一个 React Vite 项目。
 
-[调用 create_react_app 工具]
+[调用 xagi_create_react_app 工具]
 
 ✅ 项目创建成功！
 🚀 下一步：
@@ -76,7 +76,7 @@ Claude: 我将在当前目录创建一个 React Vite 项目。
 
 Claude: 我将为您创建一个 Vue 3 项目。
 
-[调用 create_frontend 工具，参数：template: "vue3-vite", projectName: "my-vue-app"]
+[调用 xagi_create_frontend 工具，参数：template: "vue3-vite", projectName: "my-vue-app"]
 
 ✅ 项目创建成功！
 🚀 下一步：
@@ -87,16 +87,16 @@ Claude: 我将为您创建一个 Vue 3 项目。
 
 ## 📋 可用工具
 
-### 1. create_react_app（推荐）
-一键创建 React + Next.js 项目，使用最佳默认配置
+### 1. xagi_create_react_app（推荐）
+一键创建 React + Vite 项目，使用最佳默认配置
 
-### 2. create_frontend（通用）
+### 2. xagi_create_frontend（通用）
 创建前端项目，支持多种模板和自定义配置
 
-### 3. list_templates
+### 3. xagi_list_templates
 查看所有可用模板及其特性
 
-### 4. cache_info / cache_clear / cache_warm
+### 4. xagi_cache_info / xagi_cache_clear / xagi_cache_warm
 缓存管理工具
 
 ## 📦 支持的模板

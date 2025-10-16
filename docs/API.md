@@ -2,7 +2,7 @@
 
 ## 可用工具
 
-### 1. create_frontend
+### 1. xagi_create_frontend
 创建前端项目，支持多种模板和自定义配置。
 
 **参数**:
@@ -23,7 +23,7 @@
 **示例**:
 ```json
 {
-  "name": "create_frontend",
+  "name": "xagi_create_frontend",
   "arguments": {
     "template": "react-vite",
     "projectName": "my-app",
@@ -33,7 +33,7 @@
 }
 ```
 
-### 2. create_react_app
+### 2. xagi_create_react_app
 一键创建 React + Vite 项目，使用最佳默认配置。
 
 **参数**:
@@ -48,7 +48,7 @@
 **示例**:
 ```json
 {
-  "name": "create_react_app",
+  "name": "xagi_create_react_app",
   "arguments": {
     "projectName": "my-react-app",
     "autoInstall": true
@@ -56,30 +56,30 @@
 }
 ```
 
-### 3. list_templates
+### 3. xagi_list_templates
 查看所有可用模板及其特性。
 
 **参数**: 无
 
-### 4. download_template
+### 4. xagi_download_template
 下载指定模板到本地临时目录。
 
 **参数**:
 - `template` (string, 必需): 模板名称
 - `templateUrl` (string, 可选): 自定义模板仓库URL
 
-### 5. cache_info
+### 5. xagi_cache_info
 查看缓存统计信息和配置。
 
 **参数**: 无
 
-### 6. cache_clear
+### 6. xagi_cache_clear
 清除模板缓存（需要确认）。
 
 **参数**:
 - `confirm` (boolean, 必需): 确认清除缓存
 
-### 7. cache_warm
+### 7. xagi_cache_warm
 预热模板缓存，提前下载模板。
 
 **参数**:

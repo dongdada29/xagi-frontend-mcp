@@ -55,7 +55,7 @@ export class MCPServer {
   private getToolDefinitions() {
     return [
       {
-        name: "create_frontend",
+        name: "xagi_create_frontend",
         description:
           "为 AI Agent 提供前端工程初始化工具。使用 React+Vite 模板在当前目录创建现代化前端项目。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
@@ -95,7 +95,7 @@ export class MCPServer {
         },
       },
       {
-        name: "create_react_app",
+        name: "xagi_create_react_app",
         description:
           "AI Agent 专用工具：一键创建 React+Vite 现代化项目，使用最佳默认配置和远程模板。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
@@ -127,7 +127,7 @@ export class MCPServer {
         },
       },
       {
-        name: "download_template",
+        name: "xagi_download_template",
         description: "AI Agent 工具：从远程仓库下载指定模板到本地临时目录",
         inputSchema: {
           type: "object",
@@ -145,7 +145,7 @@ export class MCPServer {
         },
       },
       {
-        name: "list_templates",
+        name: "xagi_list_templates",
         description: "AI Agent 工具：列出所有可用的前端项目模板及其特性描述",
         inputSchema: {
           type: "object",
@@ -158,7 +158,7 @@ export class MCPServer {
         },
       },
       {
-        name: "cache_info",
+        name: "xagi_cache_info",
         description: "AI Agent 工具：获取模板缓存统计信息和配置状态",
         inputSchema: {
           type: "object",
@@ -166,7 +166,7 @@ export class MCPServer {
         },
       },
       {
-        name: "cache_clear",
+        name: "xagi_cache_clear",
         description: "AI Agent 工具：清除模板缓存（需要确认参数）",
         inputSchema: {
           type: "object",
@@ -180,7 +180,7 @@ export class MCPServer {
         },
       },
       {
-        name: "cache_warm",
+        name: "xagi_cache_warm",
         description: "AI Agent 工具：预热模板缓存，提前下载模板以确保离线可用",
         inputSchema: {
           type: "object",
@@ -206,19 +206,19 @@ export class MCPServer {
    */
   private async handleToolCall(name: string, args: any) {
     switch (name) {
-      case "create_frontend":
+      case "xagi_create_frontend":
         return await this.handleCreateFrontend(args as CreateFrontendArgs);
-      case "create_react_app":
+      case "xagi_create_react_app":
         return await this.handleCreateReactApp(args as CreateReactAppArgs);
-      case "download_template":
+      case "xagi_download_template":
         return await this.handleDownloadTemplate(args as DownloadTemplateArgs);
-      case "list_templates":
+      case "xagi_list_templates":
         return await this.handleListTemplates();
-      case "cache_info":
+      case "xagi_cache_info":
         return await this.handleCacheInfo(args as CacheInfoArgs);
-      case "cache_clear":
+      case "xagi_cache_clear":
         return await this.handleCacheClear(args as CacheClearArgs);
-      case "cache_warm":
+      case "xagi_cache_warm":
         return await this.handleCacheWarm(args as CacheWarmArgs);
       default:
         throw new Error(`Unknown tool: ${name}`);
