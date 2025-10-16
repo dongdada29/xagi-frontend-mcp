@@ -2,7 +2,21 @@
 
 ## 支持的模板
 
-### 1. react-next (默认)
+### 1. react-vite (默认)
+**技术栈**: React 18 + Vite + TypeScript
+
+**特性**:
+- Vite 快速构建
+- 热重载开发体验
+- TypeScript 支持
+- ESLint + Prettier
+- 现代化开发工具链
+
+**默认端口**: 3000
+
+**适用场景**: 单页应用、快速原型、中小型项目
+
+### 2. react-next
 **技术栈**: React 18 + Next.js 14 + TypeScript + Tailwind CSS + Radix UI
 
 **特性**:
@@ -17,20 +31,6 @@
 **默认端口**: 3000
 
 **适用场景**: 企业级应用、内容管理系统、电商平台、SaaS应用
-
-### 2. react-vite
-**技术栈**: React 18 + Vite + TypeScript
-
-**特性**:
-- Vite 快速构建
-- 热重载开发体验
-- TypeScript 支持
-- ESLint + Prettier
-- 现代化开发工具链
-
-**默认端口**: 3000
-
-**适用场景**: 单页应用、快速原型、中小型项目
 
 ### 3. vue3-vite
 **技术栈**: Vue 3 + Composition API + Vite + TypeScript

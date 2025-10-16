@@ -157,8 +157,8 @@ async function testCurrentDirectoryCreation() {
     // 切换到临时目录
     process.chdir(tempDir);
 
-    // 调用create_react_app不指定projectName
-    const result = await callMCPTool('create_react_app', {});
+    // 调用xagi_create_react_app不指定projectName
+    const result = await callMCPTool('xagi_create_react_app', {});
 
     if (result.error) {
       throw new Error(`MCP工具调用失败: ${result.error.message}`);
@@ -203,8 +203,8 @@ async function testCustomPortConfiguration() {
   try {
     process.chdir(tempDir);
 
-    // 调用create_react_app指定自定义端口
-    const result = await callMCPTool('create_react_app', { port: testPort });
+    // 调用xagi_create_react_app指定自定义端口
+    const result = await callMCPTool('xagi_create_react_app', { port: testPort });
 
     if (result.error) {
       throw new Error(`MCP工具调用失败: ${result.error.message}`);
@@ -239,8 +239,8 @@ async function testDefaultPortConfiguration() {
   try {
     process.chdir(tempDir);
 
-    // 调用create_react_app不指定端口（使用默认值）
-    const result = await callMCPTool('create_react_app', {});
+    // 调用xagi_create_react_app不指定端口（使用默认值）
+    const result = await callMCPTool('xagi_create_react_app', {});
 
     if (result.error) {
       throw new Error(`MCP工具调用失败: ${result.error.message}`);
@@ -265,7 +265,7 @@ async function testDefaultPortConfiguration() {
 }
 
 /**
- * 测试套件：create_frontend工具端口配置
+ * 测试套件：xagi_create_frontend工具端口配置
  */
 async function testCreateFrontendPortConfiguration() {
   const tempDir = createTempDir('create-frontend-port');
@@ -275,8 +275,8 @@ async function testCreateFrontendPortConfiguration() {
   try {
     process.chdir(tempDir);
 
-    // 调用create_frontend指定端口
-    const result = await callMCPTool('create_frontend', {
+    // 调用xagi_create_frontend指定端口
+    const result = await callMCPTool('xagi_create_frontend', {
       template: 'react-vite',
       port: testPort
     });
@@ -288,7 +288,7 @@ async function testCreateFrontendPortConfiguration() {
     // 验证端口配置
     const viteConfigPath = path.join(tempDir, 'vite.config.ts');
     if (!checkFileContent(viteConfigPath, `port: ${testPort}`)) {
-      throw new Error('create_frontend端口配置不正确');
+      throw new Error('xagi_create_frontend端口配置不正确');
     }
 
   } finally {
@@ -308,8 +308,8 @@ async function testPlaceholdersPortConfiguration() {
   try {
     process.chdir(tempDir);
 
-    // 调用create_frontend通过placeholders指定端口
-    const result = await callMCPTool('create_frontend', {
+    // 调用xagi_create_frontend通过placeholders指定端口
+    const result = await callMCPTool('xagi_create_frontend', {
       template: 'react-vite',
       placeholders: { port: testPort }
     });
@@ -357,7 +357,7 @@ async function runTests() {
     await runTest('不指定projectName时使用当前目录根目录', testCurrentDirectoryCreation);
     await runTest('自定义端口配置', testCustomPortConfiguration);
     await runTest('默认端口配置', testDefaultPortConfiguration);
-    await runTest('create_frontend工具端口配置', testCreateFrontendPortConfiguration);
+    await runTest('xagi_create_frontend工具端口配置', testCreateFrontendPortConfiguration);
     await runTest('placeholders中的端口配置', testPlaceholdersPortConfiguration);
     await runTest('指定projectName时创建子目录', testProjectNameDirectoryCreation);
 

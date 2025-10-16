@@ -40,7 +40,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: "create_frontend",
+        name: "xagi_create_frontend",
         description: "Generate a frontend project without external CLI",
         inputSchema: {
           type: "object",

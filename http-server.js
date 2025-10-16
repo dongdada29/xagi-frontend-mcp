@@ -24,7 +24,7 @@ async function main() {
 
     console.log(`🚀 XAGI Frontend MCP HTTP server started`);
     console.log(`📡 Server running at http://${HTTP_CONFIG.HOST}:${HTTP_CONFIG.PORT}`);
-    console.log(`🛠️  Available tools: create_frontend, create_react_app, download_template, list_templates, cache_info, cache_clear, cache_warm`);
+    console.log(`🛠️  Available tools: xagi_create_frontend, xagi_create_react_app, xagi_download_template, xagi_list_templates, xagi_cache_info, xagi_cache_clear, xagi_cache_warm`);
 
     // Graceful shutdown handling
     process.on('SIGINT', () => {

@@ -58,9 +58,9 @@ claude mcp add xagi-frontend-template --env NODE_ENV=production -- npx xagi-fron
 ```
 用户: 创建一个 React 项目
 
-Claude: 我来帮您创建一个 React Next.js 项目。
+Claude: 我来帮您创建一个 React Vite 项目。
 
-[调用 create_react_app 工具]
+[调用 xagi_create_react_app 工具]
 
 ✅ 项目创建成功！
 🚀 下一步：
@@ -74,7 +74,7 @@ Claude: 我来帮您创建一个 React Next.js 项目。
 
 Claude: 我来帮您创建一个 Vue 3 项目。
 
-[调用 create_frontend 工具，参数：template: "vue3-vite"]
+[调用 xagi_create_frontend 工具，参数：template: "vue3-vite"]
 
 ✅ 项目创建成功！
 🚀 下一步：

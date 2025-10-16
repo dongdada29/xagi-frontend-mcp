@@ -28,7 +28,7 @@
 
 ### 1. ✅ 不指定projectName时使用当前目录根目录
 
-**测试内容**: 验证调用`create_react_app`不指定projectName时，项目文件直接创建在当前目录
+**测试内容**: 验证调用`xagi_create_react_app`不指定projectName时，项目文件直接创建在当前目录
 
 **验证点**:
 - ✅ 项目文件直接创建在当前目录根目录
@@ -42,7 +42,7 @@
 **测试内容**: 验证通过`port`参数自定义开发服务器端口
 
 **验证点**:
-- ✅ 调用`create_react_app({port: "9999"})`
+- ✅ 调用`xagi_create_react_app({port: "9999"})`
 - ✅ `vite.config.ts`中正确设置`port: 9999`
 - ✅ `package.json`中scripts正确设置`"dev": "vite --port 9999"`
 
@@ -53,7 +53,7 @@
 **测试内容**: 验证不指定端口时使用默认端口5173
 
 **验证点**:
-- ✅ 调用`create_react_app()`不指定端口
+- ✅ 调用`xagi_create_react_app()`不指定端口
 - ✅ `vite.config.ts`中正确设置`port: 5173`
 - ✅ `package.json`中scripts正确设置`"dev": "vite --port 5173"`
 
@@ -61,10 +61,10 @@
 
 ### 4. ✅ create_frontend工具端口配置
 
-**测试内容**: 验证`create_frontend`工具支持端口配置
+**测试内容**: 验证`xagi_create_frontend`工具支持端口配置
 
 **验证点**:
-- ✅ 调用`create_frontend({template: "react-vite", port: "8888"})`
+- ✅ 调用`xagi_create_frontend({template: "react-vite", port: "8888"})`
 - ✅ `vite.config.ts`中正确设置端口
 
 **测试通过**: create_frontend工具端口配置正常工作
@@ -74,7 +74,7 @@
 **测试内容**: 验证通过placeholders对象配置端口
 
 **验证点**:
-- ✅ 调用`create_frontend({template: "react-vite", placeholders: {port: "7777"}})`
+- ✅ 调用`xagi_create_frontend({template: "react-vite", placeholders: {port: "7777"}})`
 - ✅ `vite.config.ts`中正确设置端口
 
 **测试通过**: placeholders端口配置正常工作
@@ -113,8 +113,8 @@
 **实现状态**: 完全实现并通过测试
 
 **支持方式**:
-1. **port参数**: `create_react_app({port: "3000"})`
-2. **placeholders**: `create_frontend({placeholders: {port: "3000"}})`
+1. **port参数**: `xagi_create_react_app({port: "3000"})`
+2. **placeholders**: `xagi_create_frontend({placeholders: {port: "3000"}})`
 3. **默认值**: 不指定时使用5173
 
 **配置文件**:
@@ -136,10 +136,10 @@
 **推荐使用方式**:
 ```javascript
 // 推荐：在当前目录创建项目
-create_react_app({port: "3000"})
+xagi_create_react_app({port: "3000"})
 
 // 或：使用placeholders配置
-create_frontend({
+xagi_create_frontend({
   template: "react-vite",
   placeholders: {
     port: "3000",

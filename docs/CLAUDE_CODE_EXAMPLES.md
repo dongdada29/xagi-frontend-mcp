@@ -2,14 +2,14 @@
 
 ## 在当前目录初始化项目
 
-### 使用 create_react_app（推荐）
+### 使用 xagi_create_react_app（推荐）
 
 ```
 用户: 在当前目录创建一个 React 项目
 
-Claude: 我将在当前目录创建一个 React Next.js 项目。
+Claude: 我将在当前目录创建一个 React Vite 项目。
 
-[调用 create_react_app 工具]
+[调用 xagi_create_react_app 工具]
 
 ✅ 项目创建成功！
 🚀 下一步：
@@ -17,14 +17,14 @@ Claude: 我将在当前目录创建一个 React Next.js 项目。
    启动开发服务器
 ```
 
-### 使用 create_frontend 工具
+### 使用 xagi_create_frontend 工具
 
 ```
 用户: 在当前目录创建一个 Vue 项目
 
 Claude: 我将在当前目录创建一个 Vue 3 项目。
 
-[调用 create_frontend 工具，参数：template: "vue3-vite"]
+[调用 xagi_create_frontend 工具，参数：template: "vue3-vite"]
 
 ✅ Vue 3 项目创建成功！
 🚀 下一步：
@@ -37,10 +37,10 @@ Claude: 我将在当前目录创建一个 Vue 3 项目。
 ```
 用户: 创建一个名为 my-app 的 React 项目
 
-Claude: 我将为您创建一个 React Next.js 项目。
+Claude: 我将为您创建一个 React Vite 项目。
 
-[调用 create_frontend 工具，参数：
-- template: "react-next"
+[调用 xagi_create_frontend 工具，参数：
+- template: "react-vite"
 - projectName: "my-app"
 ]
 
