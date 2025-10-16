@@ -7,7 +7,7 @@
 ## ✨ 核心特性
 
 - 🤖 **AI Agent 优化** - 专为 AI 对话场景设计
-- 🚀 **Next.js 默认** - 默认使用 React + Next.js + Tailwind + Radix UI
+- 🚀 **Vite 默认** - 默认使用 React + Vite + TypeScript
 - 📦 **多模板支持** - react-next、react-vite、vue3-vite 三种模板
 - 🌐 **远程模板** - 从 GitHub 仓库下载最新模板
 - 💾 **智能缓存** - 自动缓存，95%+ 性能提升
@@ -59,7 +59,7 @@ claude mcp add xagi-frontend-template --env NODE_ENV=production -- npx xagi-fron
 ```
 用户: 在当前目录创建一个 React 项目
 
-Claude: 我将在当前目录创建一个 React Next.js 项目。
+Claude: 我将在当前目录创建一个 React Vite 项目。
 
 [调用 create_react_app 工具]
 
@@ -101,12 +101,12 @@ Claude: 我将为您创建一个 Vue 3 项目。
 
 ## 📦 支持的模板
 
-### 🚀 React + Next.js（默认）
-- React 18 + Next.js 14 + TypeScript + Tailwind CSS + Radix UI
+### 🚀 React + Vite（默认）
+- React 18 + Vite + TypeScript
 - 默认端口: 3000
 
-### ⚡ React + Vite
-- React 18 + Vite + TypeScript
+### ⚡ React + Next.js
+- React 18 + Next.js 14 + TypeScript + Tailwind CSS + Radix UI
 - 默认端口: 3000
 
 ### 🟢 Vue3 + Vite

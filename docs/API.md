@@ -25,7 +25,7 @@
 {
   "name": "create_frontend",
   "arguments": {
-    "template": "react-next",
+    "template": "react-vite",
     "projectName": "my-app",
     "useRemote": true,
     "autoInstall": true
@@ -34,7 +34,7 @@
 ```
 
 ### 2. create_react_app
-一键创建 React + Next.js 项目，使用最佳默认配置。
+一键创建 React + Vite 项目，使用最佳默认配置。
 
 **参数**:
 - `projectName` (string, 可选): 项目名称
@@ -90,8 +90,8 @@
 
 | 模板 | 描述 | 默认端口 | 特性 |
 |------|------|----------|------|
+| react-vite | React + Vite + TypeScript（默认） | 3000 | 快速构建，热重载 |
 | react-next | React + Next.js + TypeScript + Tailwind + Radix UI | 3000 | 全栈框架，SSR，API路由 |
-| react-vite | React + Vite + TypeScript | 3000 | 快速构建，热重载 |
 | vue3-vite | Vue 3 + Composition API + Vite + TypeScript | 4000 | 现代Vue开发体验 |
 
 ## 错误处理

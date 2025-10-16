@@ -57,7 +57,7 @@ export class MCPServer {
       {
         name: "create_frontend",
         description:
-          "为 AI Agent 提供前端工程初始化工具。使用 React+Next.js 模板在当前目录创建现代化前端项目。如果 projectName 不指定，将在当前目录创建项目",
+          "为 AI Agent 提供前端工程初始化工具。使用 React+Vite 模板在当前目录创建现代化前端项目。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
           type: "object",
           properties: {
@@ -97,7 +97,7 @@ export class MCPServer {
       {
         name: "create_react_app",
         description:
-          "AI Agent 专用工具：一键创建 React+Next.js 现代化项目，使用最佳默认配置和远程模板。如果 projectName 不指定，将在当前目录创建项目",
+          "AI Agent 专用工具：一键创建 React+Vite 现代化项目，使用最佳默认配置和远程模板。如果 projectName 不指定，将在当前目录创建项目",
         inputSchema: {
           type: "object",
           properties: {
@@ -252,9 +252,9 @@ export class MCPServer {
   private async handleCreateReactApp(args: CreateReactAppArgs) {
     const { projectName, port, useRemote = true, autoInstall = false } = args;
 
-    // Force react-next template with remote download
+    // Force react-vite template with remote download
     const result = await this.templateService.createFrontendProject(
-      "react-next",
+      "react-vite",
       projectName,
       {},
       useRemote,
